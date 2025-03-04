@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
 import { logout } from '../../store/slices/authSlice';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Settings } from 'lucide-react';
 import ThemeToggle from '../ui/ThemeToggle';
 import Button from '../ui/Button';
 
@@ -57,6 +57,14 @@ const Navbar: React.FC = () => {
               
               {isAuthenticated ? (
                 <>
+                  {user?.role === 'admin' && (
+                    <Link to="/admin">
+                      <Button variant="outline" size="sm" className="flex items-center gap-1">
+                        <Settings size={16} />
+                        <span>Admin</span>
+                      </Button>
+                    </Link>
+                  )}
                   <Link to="/dashboard">
                     <Button variant="outline" size="sm">
                       Dashboard
@@ -128,6 +136,15 @@ const Navbar: React.FC = () => {
               <div className="space-y-1">
                 {isAuthenticated ? (
                   <>
+                    {user?.role === 'admin' && (
+                      <Link
+                        to="/admin"
+                        className="block pl-3 pr-4 py-2 text-base font-medium text-charcoal hover:bg-moss-green/20 hover:text-forest-green"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Admin
+                      </Link>
+                    )}
                     <Link
                       to="/dashboard"
                       className="block pl-3 pr-4 py-2 text-base font-medium text-charcoal hover:bg-moss-green/20 hover:text-forest-green"

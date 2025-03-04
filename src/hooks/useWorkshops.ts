@@ -1,33 +1,57 @@
 import { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../store';
 import { 
-  fetchWorkshopsStart, 
-  fetchWorkshopsSuccess, 
-  fetchWorkshopsFailure 
+  setWorkshops, 
+  setLoading, 
+  setError,
+  filterWorkshops
 } from '../store/slices/workshopsSlice';
-import { getWorkshops } from '../utils/mockData';
+import { mockWorkshops } from '../utils/mockData';
+import { getWorkshops } from '../services/firebaseService';
 
 export const useWorkshops = () => {
   const dispatch = useDispatch();
-  
+  const { workshops, filteredWorkshops, loading, error, filters } = useSelector(
+    (state: RootState) => state.workshops
+  );
+
   useEffect(() => {
-    const loadWorkshops = async () => {
+    const fetchWorkshops = async () => {
+      dispatch(setLoading(true));
       try {
-        dispatch(fetchWorkshopsStart());
+        // Check if we're using mock data based on environment variable
+        const useMockData = import.meta.env.VITE_USE_MOCK_DATA === 'true';
         
-        // In a real app, this would be an API call
-        // For now, we're using mock data from localStorage
-        const workshops = getWorkshops();
+        let workshopsData;
+        if (useMockData) {
+          // Use mock data
+          workshopsData = mockWorkshops;
+        } else {
+          // Fetch from Firebase
+          workshopsData = await getWorkshops();
+        }
         
-        // Simulate network delay
-        setTimeout(() => {
-          dispatch(fetchWorkshopsSuccess(workshops));
-        }, 500);
-      } catch (error) {
-        dispatch(fetchWorkshopsFailure(error instanceof Error ? error.message : 'Failed to fetch workshops'));
+        dispatch(setWorkshops(workshopsData));
+      } catch (err) {
+        console.error('Error fetching workshops:', err);
+        dispatch(setError('Failed to fetch workshops. Please try again later.'));
       }
     };
-    
-    loadWorkshops();
+
+    fetchWorkshops();
   }, [dispatch]);
+
+  const applyFilters = (filterParams: { search?: string; level?: string; tags?: string[] }) => {
+    dispatch(filterWorkshops(filterParams));
+  };
+
+  return {
+    workshops,
+    filteredWorkshops,
+    loading,
+    error,
+    filters,
+    applyFilters
+  };
 };

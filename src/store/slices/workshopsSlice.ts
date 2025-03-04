@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { WorkshopsState, Workshop } from '../../types';
-import { getWorkshops } from '../../utils/mockData';
+import { mockWorkshops } from '../../utils/mockData';
 
 const initialState: WorkshopsState = {
   workshops: [],
@@ -19,6 +19,18 @@ const workshopsSlice = createSlice({
   name: 'workshops',
   initialState,
   reducers: {
+    setWorkshops(state, action: PayloadAction<Workshop[]>) {
+      state.workshops = action.payload;
+      state.filteredWorkshops = action.payload;
+      state.loading = false;
+    },
+    setLoading(state, action: PayloadAction<boolean>) {
+      state.loading = action.payload;
+    },
+    setError(state, action: PayloadAction<string | null>) {
+      state.error = action.payload;
+      state.loading = false;
+    },
     fetchWorkshopsStart(state) {
       state.loading = true;
       state.error = null;
@@ -89,7 +101,7 @@ const workshopsSlice = createSlice({
         workshop.registered += 1;
         
         // Update localStorage
-        const workshops = getWorkshops();
+        const workshops = mockWorkshops;
         const updatedWorkshops = workshops.map(w => 
           w.id === workshopId ? { ...w, registered: w.registered + 1 } : w
         );
@@ -100,6 +112,9 @@ const workshopsSlice = createSlice({
 });
 
 export const { 
+  setWorkshops,
+  setLoading,
+  setError,
   fetchWorkshopsStart, 
   fetchWorkshopsSuccess, 
   fetchWorkshopsFailure,

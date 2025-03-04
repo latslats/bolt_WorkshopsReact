@@ -1,5 +1,4 @@
 import React from 'react';
-import Layout from '../components/layout/Layout';
 import Hero from '../components/home/Hero';
 import Features from '../components/home/Features';
 import FeaturedWorkshops from '../components/home/FeaturedWorkshops';
@@ -9,7 +8,7 @@ import Button from '../components/ui/Button';
 
 const HomePage: React.FC = () => {
   return (
-    <Layout>
+    <>
       <Hero />
       <Features />
       <FeaturedWorkshops />
@@ -46,7 +45,7 @@ const HomePage: React.FC = () => {
       </section>
       
       <Testimonials />
-    </Layout>
+    </>
   );
 };
 

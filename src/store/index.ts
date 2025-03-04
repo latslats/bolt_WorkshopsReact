@@ -1,13 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './slices/authSlice';
-import workshopsReducer from './slices/workshopsSlice';
 import uiReducer from './slices/uiSlice';
+import workshopsReducer from './slices/workshopsSlice';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
-    workshops: workshopsReducer,
     ui: uiReducer,
+    workshops: workshopsReducer,
   },
 });
 
