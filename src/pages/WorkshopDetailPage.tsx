@@ -1,66 +1,50 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store';
-import { setCurrentWorkshop } from '../store/slices/workshopsSlice';
+import { registerForWorkshop } from '../store/slices/workshopsSlice';
 import Layout from '../components/layout/Layout';
 import WorkshopDetail from '../components/workshops/WorkshopDetail';
-import { useWorkshops } from '../hooks/useWorkshops';
-import { motion } from 'framer-motion';
+import { Workshop } from '../types';
+import { toast } from 'react-hot-toast';
 
 const WorkshopDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  
-  const { workshops, currentWorkshop, loading, error } = useSelector((state: RootState) => state.workshops);
-  
-  // Load workshops data
-  useWorkshops();
+  const { workshops } = useSelector((state: RootState) => state.workshops);
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const [workshop, setWorkshop] = useState<Workshop | null>(null);
   
   useEffect(() => {
-    if (workshops.length > 0 && id) {
-      const workshop = workshops.find(w => w.id === id);
-      if (workshop) {
-        dispatch(setCurrentWorkshop(workshop));
+    if (id && workshops.length > 0) {
+      const foundWorkshop = workshops.find(w => w.id === id);
+      if (foundWorkshop) {
+        setWorkshop(foundWorkshop);
       } else {
-        // Workshop not found
         navigate('/workshops');
       }
     }
-  }, [workshops, id, dispatch, navigate]);
+  }, [id, workshops, navigate]);
   
-  if (loading) {
+  const handleRegister = () => {
+    if (!isAuthenticated) {
+      toast.error('Please sign in to register for workshops');
+      navigate('/login');
+      return;
+    }
+    
+    if (workshop) {
+      dispatch(registerForWorkshop(workshop.id));
+      toast.success(`Successfully registered for ${workshop.title}`);
+    }
+  };
+  
+  if (!workshop) {
     return (
       <Layout>
-        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-          <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400">Loading workshop details...</p>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
-  
-  if (error) {
-    return (
-      <Layout>
-        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-          <div className="text-center py-12">
-            <p className="text-red-500">{error}</p>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
-  
-  if (!currentWorkshop) {
-    return (
-      <Layout>
-        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-          <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400">Workshop not found</p>
-          </div>
+        <div className="flex justify-center items-center h-64">
+          <p className="text-gray-500 dark:text-gray-400">Loading workshop details...</p>
         </div>
       </Layout>
     );
@@ -68,15 +52,10 @@ const WorkshopDetailPage: React.FC = () => {
   
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <WorkshopDetail workshop={currentWorkshop} />
-        </motion.div>
-      </div>
+      <WorkshopDetail 
+        workshop={workshop} 
+        onRegister={handleRegister}
+      />
     </Layout>
   );
 };

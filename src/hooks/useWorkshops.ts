@@ -1,33 +1,33 @@
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../config/firebase';
-import { setWorkshops, setLoading, setError } from '../store/slices/workshopsSlice';
-import { Workshop } from '../types';
+import { 
+  fetchWorkshopsStart, 
+  fetchWorkshopsSuccess, 
+  fetchWorkshopsFailure 
+} from '../store/slices/workshopsSlice';
+import { getWorkshops } from '../utils/mockData';
 
 export const useWorkshops = () => {
   const dispatch = useDispatch();
-
+  
   useEffect(() => {
-    const fetchWorkshops = async () => {
-      dispatch(setLoading(true));
+    const loadWorkshops = async () => {
       try {
-        const workshopsCollection = collection(db, 'workshops');
-        const workshopSnapshot = await getDocs(workshopsCollection);
-        const workshopList = workshopSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Workshop[];
+        dispatch(fetchWorkshopsStart());
         
-        dispatch(setWorkshops(workshopList));
+        // In a real app, this would be an API call
+        // For now, we're using mock data from localStorage
+        const workshops = getWorkshops();
+        
+        // Simulate network delay
+        setTimeout(() => {
+          dispatch(fetchWorkshopsSuccess(workshops));
+        }, 500);
       } catch (error) {
-        console.error('Error fetching workshops:', error);
-        dispatch(setError('Failed to fetch workshops. Please try again later.'));
+        dispatch(fetchWorkshopsFailure(error instanceof Error ? error.message : 'Failed to fetch workshops'));
       }
     };
-
-    fetchWorkshops();
+    
+    loadWorkshops();
   }, [dispatch]);
 };
-
-export default useWorkshops;

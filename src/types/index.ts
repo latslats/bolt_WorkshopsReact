@@ -2,49 +2,39 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  photoURL: string;
+  role: 'student' | 'instructor' | 'admin';
   registeredWorkshops?: string[];
-  completedWorkshops?: string[];
 }
 
 export interface Workshop {
   id: string;
   title: string;
   description: string;
-  shortDescription: string;
-  instructor: {
-    name: string;
-    bio: string;
-    photoURL: string;
-  };
-  difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
-  topic: string;
-  sessions: Session[];
-  prerequisites: string[];
-  materials: string[];
-  imageUrl: string;
-  startDate: string;
-  endDate: string;
-  capacity: number;
-  registeredUsers: number;
-}
-
-export interface Session {
-  id: string;
-  title: string;
-  description: string;
-  duration: string;
+  instructor: string;
   date: string;
-  content: string;
+  sessions: number;
+  level: 'Beginner' | 'Intermediate' | 'Advanced';
+  tags: string[];
+  capacity: number;
+  registered: number;
   materials?: string[];
 }
 
-export interface Comment {
-  id: string;
-  userId: string;
-  userName: string;
-  userPhotoURL: string;
-  workshopId: string;
-  content: string;
-  timestamp: string;
+export interface AuthState {
+  user: User | null;
+  isAuthenticated: boolean;
+  loading: boolean;
+  error: string | null;
+}
+
+export interface UIState {
+  theme: 'light' | 'dark';
+  sidebarOpen: boolean;
+}
+
+export interface WorkshopsState {
+  workshops: Workshop[];
+  filteredWorkshops: Workshop[];
+  loading: boolean;
+  error: string | null;
 }

@@ -1,77 +1,57 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 
 const testimonials = [
   {
-    content: "The Python workshop completely changed how I approach coding problems. The AI integration was eye-opening!",
-    author: "Sarah Johnson",
-    role: "Frontend Developer",
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+    content: "The React workshop was incredibly helpful. I went from barely understanding components to building my own app in just a few sessions.",
+    author: "Sarah J.",
+    role: "Frontend Developer"
   },
   {
-    content: "As someone new to programming, I was worried about keeping up, but the instructors were patient and the materials were clear and accessible.",
-    author: "Michael Chen",
-    role: "UX Designer",
-    image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+    content: "The instructors are knowledgeable and patient. They take time to explain complex concepts in a way that's easy to understand.",
+    author: "Michael T.",
+    role: "CS Student"
   },
   {
-    content: "The workshop's focus on practical applications helped me implement AI solutions at work immediately. Highly recommended!",
-    author: "Alex Rodriguez",
-    role: "Data Scientist",
-    image: "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-  },
+    content: "I've tried many online courses, but nothing compares to the interactive nature of these workshops. Highly recommended!",
+    author: "Priya K.",
+    role: "Software Engineer"
+  }
 ];
 
 const Testimonials: React.FC = () => {
   return (
-    <div className="bg-gray-50 dark:bg-gray-800 py-16 px-4 sm:px-6 lg:py-24 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <motion.div 
-          className="text-center mb-12"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl">
-            What Our Students Say
+    <section className="py-12 bg-moss-green/10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center">
+          <h2 className="text-3xl font-extrabold text-forest-green sm:text-4xl">
+            What Our Community Says
           </h2>
-          <p className="mt-4 text-xl text-gray-500 dark:text-gray-400 max-w-3xl mx-auto">
-            Hear from developers who have transformed their skills through our workshops.
+          <p className="mt-3 max-w-2xl mx-auto text-xl text-charcoal sm:mt-4">
+            Don't just take our word for it
           </p>
-        </motion.div>
+        </div>
         
-        <div className="mt-10">
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-            {testimonials.map((testimonial, index) => (
-              <motion.div
-                key={testimonial.author}
-                className="bg-white dark:bg-gray-900 rounded-lg shadow-lg overflow-hidden"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <div className="p-8">
-                  <div className="flex items-center mb-6">
-                    <div className="h-12 w-12 rounded-full overflow-hidden mr-4">
-                      <img
-                        src={testimonial.image}
-                        alt={testimonial.author}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900 dark:text-white">{testimonial.author}</h3>
-                      <p className="text-gray-500 dark:text-gray-400">{testimonial.role}</p>
-                    </div>
-                  </div>
-                  <p className="text-gray-600 dark:text-gray-300 italic">"{testimonial.content}"</p>
+        <div className="mt-12 grid gap-8 md:grid-cols-3">
+          {testimonials.map((testimonial, index) => (
+            <div 
+              key={index} 
+              className="bg-white rounded-lg shadow-md p-6 border border-moss-green/10"
+            >
+              <div className="flex items-center mb-4">
+                <div className="h-12 w-12 rounded-full bg-forest-green flex items-center justify-center text-white-linen font-bold text-xl">
+                  {testimonial.author.charAt(0)}
                 </div>
-              </motion.div>
-            ))}
-          </div>
+                <div className="ml-4">
+                  <h4 className="text-lg font-semibold text-forest-green">{testimonial.author}</h4>
+                  <p className="text-charcoal/70">{testimonial.role}</p>
+                </div>
+              </div>
+              <p className="text-charcoal italic">"{testimonial.content}"</p>
+            </div>
+          ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

@@ -1,107 +1,112 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Workshop } from '../../types';
-
-interface WorkshopsState {
-  workshops: Workshop[];
-  filteredWorkshops: Workshop[];
-  currentWorkshop: Workshop | null;
-  loading: boolean;
-  error: string | null;
-  filters: {
-    difficulty: string | null;
-    topic: string | null;
-    search: string;
-    sortBy: 'date' | 'difficulty' | 'topic';
-  };
-}
+import { WorkshopsState, Workshop } from '../../types';
+import { getWorkshops } from '../../utils/mockData';
 
 const initialState: WorkshopsState = {
   workshops: [],
   filteredWorkshops: [],
-  currentWorkshop: null,
   loading: false,
   error: null,
   filters: {
+    search: '',
     difficulty: null,
     topic: null,
-    search: '',
-    sortBy: 'date',
-  },
+    sortBy: 'date'
+  }
 };
 
 const workshopsSlice = createSlice({
   name: 'workshops',
   initialState,
   reducers: {
-    setLoading: (state, action: PayloadAction<boolean>) => {
-      state.loading = action.payload;
+    fetchWorkshopsStart(state) {
+      state.loading = true;
+      state.error = null;
     },
-    setWorkshops: (state, action: PayloadAction<Workshop[]>) => {
+    fetchWorkshopsSuccess(state, action: PayloadAction<Workshop[]>) {
       state.workshops = action.payload;
       state.filteredWorkshops = action.payload;
       state.loading = false;
-      state.error = null;
     },
-    setCurrentWorkshop: (state, action: PayloadAction<Workshop | null>) => {
-      state.currentWorkshop = action.payload;
-    },
-    setError: (state, action: PayloadAction<string>) => {
-      state.error = action.payload;
+    fetchWorkshopsFailure(state, action: PayloadAction<string>) {
       state.loading = false;
+      state.error = action.payload;
     },
-    setFilter: (state, action: PayloadAction<{ key: 'difficulty' | 'topic' | 'search' | 'sortBy', value: any }>) => {
+    filterWorkshops(state, action: PayloadAction<{ 
+      search?: string; 
+      level?: string; 
+      tags?: string[] 
+    }>) {
+      const { search, level, tags } = action.payload;
+      
+      state.filteredWorkshops = state.workshops.filter(workshop => {
+        // Filter by search term
+        if (search && !workshop.title.toLowerCase().includes(search.toLowerCase()) && 
+            !workshop.description.toLowerCase().includes(search.toLowerCase())) {
+          return false;
+        }
+        
+        // Filter by level
+        if (level && workshop.level !== level) {
+          return false;
+        }
+        
+        // Filter by tags
+        if (tags && tags.length > 0) {
+          const hasAllTags = tags.every(tag => workshop.tags.includes(tag));
+          if (!hasAllTags) {
+            return false;
+          }
+        }
+        
+        return true;
+      });
+    },
+    setFilter(state, action: PayloadAction<{ key: string; value: any }>) {
       const { key, value } = action.payload;
-      state.filters[key] = value;
+      state.filters = {
+        ...state.filters,
+        [key]: value
+      };
       
-      // Apply filters
-      let filtered = [...state.workshops];
-      
-      if (state.filters.difficulty) {
-        filtered = filtered.filter(w => w.difficulty === state.filters.difficulty);
-      }
-      
-      if (state.filters.topic) {
-        filtered = filtered.filter(w => w.topic === state.filters.topic);
-      }
-      
-      if (state.filters.search) {
-        const searchLower = state.filters.search.toLowerCase();
-        filtered = filtered.filter(w => 
-          w.title.toLowerCase().includes(searchLower) || 
-          w.description.toLowerCase().includes(searchLower)
-        );
-      }
-      
-      // Apply sorting
-      switch (state.filters.sortBy) {
-        case 'date':
-          filtered.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
-          break;
-        case 'difficulty':
-          const difficultyOrder = { 'Beginner': 1, 'Intermediate': 2, 'Advanced': 3 };
-          filtered.sort((a, b) => difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty]);
-          break;
-        case 'topic':
-          filtered.sort((a, b) => a.topic.localeCompare(b.topic));
-          break;
-      }
-      
-      state.filteredWorkshops = filtered;
+      // Apply filters immediately
+      // This would typically call filterWorkshops logic
     },
-    clearFilters: (state) => {
-      state.filters = initialState.filters;
+    clearFilters(state) {
+      state.filters = {
+        search: '',
+        difficulty: null,
+        topic: null,
+        sortBy: 'date'
+      };
       state.filteredWorkshops = state.workshops;
     },
-  },
+    registerForWorkshop(state, action: PayloadAction<string>) {
+      const workshopId = action.payload;
+      const workshop = state.workshops.find(w => w.id === workshopId);
+      
+      if (workshop && workshop.registered < workshop.capacity) {
+        workshop.registered += 1;
+        
+        // Update localStorage
+        const workshops = getWorkshops();
+        const updatedWorkshops = workshops.map(w => 
+          w.id === workshopId ? { ...w, registered: w.registered + 1 } : w
+        );
+        localStorage.setItem('workshops', JSON.stringify(updatedWorkshops));
+      }
+    }
+  }
 });
 
 export const { 
-  setLoading, 
-  setWorkshops, 
-  setCurrentWorkshop, 
-  setError, 
+  fetchWorkshopsStart, 
+  fetchWorkshopsSuccess, 
+  fetchWorkshopsFailure,
+  filterWorkshops,
   setFilter,
-  clearFilters 
+  clearFilters,
+  registerForWorkshop
 } = workshopsSlice.actions;
 
 export default workshopsSlice.reducer;

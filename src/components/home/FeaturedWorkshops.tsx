@@ -1,83 +1,48 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
-import { Link } from 'react-router-dom';
+import { Workshop } from '../../types';
 import WorkshopCard from '../workshops/WorkshopCard';
-import { motion } from 'framer-motion';
+import Button from '../ui/Button';
 
 const FeaturedWorkshops: React.FC = () => {
-  const { workshops, loading } = useSelector((state: RootState) => state.workshops);
+  // Get workshops from Redux store
+  const { workshops } = useSelector((state: RootState) => state.workshops);
   
-  // Get the 3 most recent workshops
+  // Filter for featured workshops (for example, the 3 most recent)
+  // Create a new array with slice() before sorting to avoid modifying the original array
   const featuredWorkshops = [...workshops]
-    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 3);
-
-  if (loading) {
-    return (
-      <div className="py-12 bg-gray-50 dark:bg-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl">
-              Featured Workshops
-            </h2>
-            <p className="mt-3 max-w-2xl mx-auto text-xl text-gray-500 dark:text-gray-400 sm:mt-4">
-              Loading workshops...
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  
   return (
-    <div className="py-12 bg-gray-50 dark:bg-gray-800">
+    <section className="py-12 bg-white-linen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl">
-              Featured Workshops
-            </h2>
-            <p className="mt-3 max-w-2xl mx-auto text-xl text-gray-500 dark:text-gray-400 sm:mt-4">
-              Explore our most popular coding workshops and start your learning journey today.
-            </p>
-          </motion.div>
+          <h2 className="text-3xl font-extrabold text-forest-green sm:text-4xl">
+            Featured Workshops
+          </h2>
+          <p className="mt-3 max-w-2xl mx-auto text-xl text-charcoal sm:mt-4">
+            Check out our most popular upcoming workshops
+          </p>
         </div>
-
-        <div className="mt-10">
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {featuredWorkshops.map((workshop, index) => (
-              <motion.div
-                key={workshop.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <WorkshopCard workshop={workshop} />
-              </motion.div>
-            ))}
-          </div>
-          
-          <motion.div 
-            className="mt-10 text-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-          >
-            <Link
-              to="/workshops"
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
+        
+        <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          {featuredWorkshops.map((workshop: Workshop) => (
+            <WorkshopCard key={workshop.id} workshop={workshop} />
+          ))}
+        </div>
+        
+        <div className="mt-10 text-center">
+          <Link to="/workshops">
+            <Button size="lg">
               View All Workshops
-            </Link>
-          </motion.div>
+            </Button>
+          </Link>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

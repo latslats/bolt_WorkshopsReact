@@ -1,29 +1,32 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { format } from 'date-fns';
-import { Calendar, Users, BookOpen } from 'lucide-react';
-import Card from '../ui/Card';
+import { useNavigate } from 'react-router-dom';
+import { Calendar, Clock, Users, Tag } from 'lucide-react';
+import { Card, CardContent, CardFooter } from '../ui/Card';
+import Button from '../ui/Button';
 import { Workshop } from '../../types';
-import { motion } from 'framer-motion';
 
 interface WorkshopCardProps {
   workshop: Workshop;
-  isRegistered?: boolean;
 }
 
-const WorkshopCard: React.FC<WorkshopCardProps> = ({ workshop, isRegistered }) => {
-  const difficultyColor = {
-    Beginner: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    Intermediate: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-    Advanced: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-  };
-
-  const startDate = new Date(workshop.startDate);
-  const formattedDate = format(startDate, 'MMM d, yyyy');
+const WorkshopCard: React.FC<WorkshopCardProps> = ({ workshop }) => {
+  const navigate = useNavigate();
   
-  const spotsLeft = workshop.capacity - workshop.registeredUsers;
-  const isFull = spotsLeft <= 0;
-
+  const handleClick = () => {
+    navigate(`/workshops/${workshop.id}`);
+  };
+  
+  // Calculate percentage of spots filled
+  const percentFilled = (workshop.registered / workshop.capacity) * 100;
+  
+  // Determine status color
+  let statusColor = 'bg-spring-garden';
+  if (percentFilled >= 90) {
+    statusColor = 'bg-red-500';
+  } else if (percentFilled >= 70) {
+    statusColor = 'bg-yellow-500';
+  }
+  
   return (
     <Card className="h-full flex flex-col">
       <div className="relative">
@@ -32,50 +35,57 @@ const WorkshopCard: React.FC<WorkshopCardProps> = ({ workshop, isRegistered }) =
           alt={workshop.title} 
           className="w-full h-48 object-cover"
         />
-        <div className="absolute top-2 right-2">
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${difficultyColor[workshop.difficulty]}`}>
-            {workshop.difficulty}
-          </span>
+        <div className="absolute top-0 right-0 m-2 px-2 py-1 bg-forest-green text-white-linen text-xs font-bold rounded">
+          {workshop.level}
         </div>
-        {isRegistered && (
-          <div className="absolute top-2 left-2">
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400">
-              Registered
-            </span>
-          </div>
-        )}
       </div>
       
-      <div className="p-4 flex-grow flex flex-col">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{workshop.title}</h3>
-        <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 flex-grow">{workshop.shortDescription}</p>
+      <CardContent className="flex-grow">
+        <h3 className="text-xl font-bold text-forest-green dark:text-moss-green mb-2">{workshop.title}</h3>
+        <p className="text-charcoal dark:text-white-linen mb-4 line-clamp-2">{workshop.description}</p>
         
-        <div className="space-y-2 mb-4">
-          <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-            <Calendar className="h-4 w-4 mr-1.5 text-gray-400 dark:text-gray-500" />
-            {formattedDate}
+        <div className="space-y-2 text-sm text-charcoal/80 dark:text-white-linen/80">
+          <div className="flex items-center">
+            <Calendar className="h-4 w-4 mr-2 text-spring-garden" />
+            <span>{new Date(workshop.date).toLocaleDateString()}</span>
           </div>
-          <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-            <Users className="h-4 w-4 mr-1.5 text-gray-400 dark:text-gray-500" />
-            {isFull ? (
-              <span className="text-red-600 dark:text-red-400">Full</span>
-            ) : (
-              <span>{spotsLeft} spots left</span>
-            )}
+          <div className="flex items-center">
+            <Clock className="h-4 w-4 mr-2 text-spring-garden" />
+            <span>{workshop.duration} hours</span>
           </div>
-          <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-            <BookOpen className="h-4 w-4 mr-1.5 text-gray-400 dark:text-gray-500" />
-            {workshop.sessions.length} sessions
+          <div className="flex items-center">
+            <Users className="h-4 w-4 mr-2 text-spring-garden" />
+            <span>{workshop.registered} / {workshop.capacity} participants</span>
+          </div>
+          <div className="flex items-center">
+            <Tag className="h-4 w-4 mr-2 text-spring-garden" />
+            <div className="flex flex-wrap gap-1">
+              {workshop.tags.map((tag, index) => (
+                <span key={index} className="inline-block bg-moss-green/20 text-forest-green dark:text-moss-green px-2 py-0.5 text-xs rounded">
+                  {tag}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
-        
-        <Link 
-          to={`/workshops/${workshop.id}`}
-          className="mt-auto inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 w-full justify-center"
-        >
+      </CardContent>
+      
+      <CardFooter className="flex justify-between items-center">
+        <div className="w-1/2">
+          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div 
+              className={`h-full ${statusColor}`}
+              style={{ width: `${percentFilled}%` }}
+            ></div>
+          </div>
+          <p className="text-xs mt-1 text-charcoal/70 dark:text-white-linen/70">
+            {workshop.capacity - workshop.registered} spots left
+          </p>
+        </div>
+        <Button onClick={handleClick}>
           View Details
-        </Link>
-      </div>
+        </Button>
+      </CardFooter>
     </Card>
   );
 };

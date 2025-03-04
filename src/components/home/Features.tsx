@@ -1,50 +1,62 @@
 import React from 'react';
-import { Users, Code, BookOpen, Zap } from 'lucide-react';
+import { Code, Users, Calendar, Award } from 'lucide-react';
+
+const features = [
+  {
+    name: 'Expert-led workshops',
+    description:
+      'Learn from industry professionals with years of experience in their fields.',
+    icon: Code,
+  },
+  {
+    name: 'Community-driven',
+    description:
+      'Join a supportive community of developers at all skill levels.',
+    icon: Users,
+  },
+  {
+    name: 'Regular sessions',
+    description:
+      'New workshops every week covering the latest technologies and practices.',
+    icon: Calendar,
+  },
+  {
+    name: 'Skill certification',
+    description:
+      'Earn certificates to showcase your newly acquired skills to employers.',
+    icon: Award,
+  },
+];
 
 const Features: React.FC = () => {
   return (
-    <section className="py-20 bg-charcoal text-white-linen">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-medium mb-6">How we help you learn</h2>
-          <div className="w-16 h-1 bg-moss-green mx-auto mb-8"></div>
+    <div className="py-12 bg-white-linen">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="lg:text-center">
+          <h2 className="text-base text-spring-garden font-semibold tracking-wide uppercase">Why Choose Us</h2>
+          <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-forest-green sm:text-4xl">
+            Not your average coding platform
+          </p>
+          <p className="mt-4 max-w-2xl text-xl text-charcoal lg:mx-auto">
+            We're committed to providing high-quality, accessible coding education for everyone.
+          </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10">
-          <div className="flex flex-col items-center text-center">
-            <Users className="h-8 w-8 text-moss-green mb-5" />
-            <h3 className="text-lg font-medium mb-3">Community Learning</h3>
-            <p className="text-white-linen/70 text-sm">
-              Connect with peers and mentors in a collaborative environment.
-            </p>
-          </div>
-
-          <div className="flex flex-col items-center text-center">
-            <Code className="h-8 w-8 text-moss-green mb-5" />
-            <h3 className="text-lg font-medium mb-3">Practical Projects</h3>
-            <p className="text-white-linen/70 text-sm">
-              Build real applications that solve actual problems.
-            </p>
-          </div>
-
-          <div className="flex flex-col items-center text-center">
-            <BookOpen className="h-8 w-8 text-moss-green mb-5" />
-            <h3 className="text-lg font-medium mb-3">Learning Resources</h3>
-            <p className="text-white-linen/70 text-sm">
-              Access curated materials to support your coding journey.
-            </p>
-          </div>
-
-          <div className="flex flex-col items-center text-center">
-            <Zap className="h-8 w-8 text-moss-green mb-5" />
-            <h3 className="text-lg font-medium mb-3">AI Tools</h3>
-            <p className="text-white-linen/70 text-sm">
-              Use modern AI tools to enhance your learning experience.
-            </p>
+        <div className="mt-10">
+          <div className="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
+            {features.map((feature) => (
+              <div key={feature.name} className="relative">
+                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-forest-green text-white-linen">
+                  <feature.icon className="h-6 w-6" aria-hidden="true" />
+                </div>
+                <p className="ml-16 text-lg leading-6 font-medium text-forest-green">{feature.name}</p>
+                <p className="mt-2 ml-16 text-base text-charcoal">{feature.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 };
 
