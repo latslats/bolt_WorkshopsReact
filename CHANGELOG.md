@@ -2,6 +2,54 @@
 
 All notable changes to the Bark & Build Lab project will be documented in this file.
 
+## [1.5.1] - 2023-12-11
+
+### Added
+- Timeout handling for Google authentication to prevent indefinite loading
+- Improved loading indicators for authentication processes
+- Better toast notifications for authentication status
+
+### Changed
+- Enhanced Google authentication provider configuration
+- Improved error handling with more specific error messages
+
+### Fixed
+- Fixed issue with Google sign-in getting stuck
+- Resolved authentication timeout problems
+- Improved error reporting for authentication failures
+
+## [1.5.0] - 2023-12-10
+
+### Added
+- Automatic admin role assignment for configured admin email
+- Improved admin detection and role assignment in Firestore
+
+### Changed
+- Switched to Google-only authentication (removed email/password authentication)
+- Enhanced admin user experience with automatic role detection
+- Updated documentation to reflect Google-only authentication
+
+### Fixed
+- Fixed issues with user creation in Firestore after authentication
+- Improved error handling for Google authentication
+- Enhanced logging for authentication processes
+
+## [1.4.0] - 2023-12-05
+
+### Added
+- Centralized authentication service with improved Google authentication
+- Enhanced error handling for authentication flows
+- Additional Google OAuth scopes for better user profile data
+
+### Changed
+- Refactored authentication logic into a dedicated service
+- Improved user data handling during sign-in and sign-up
+- Enhanced type safety for authentication functions
+
+### Fixed
+- Fixed potential issues with Google authentication flow
+- Improved error handling for authentication edge cases
+
 ## [1.3.0] - 2023-11-30
 
 ### Added

@@ -6,6 +6,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: 'default' | 'sm' | 'lg' | 'icon';
   icon?: ReactNode;
   children?: ReactNode;
+  fullWidth?: boolean;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -14,6 +15,7 @@ const Button: React.FC<ButtonProps> = ({
   size = 'default',
   icon,
   children,
+  fullWidth = false,
   ...props
 }) => {
   const baseStyles = "inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none";
@@ -38,6 +40,7 @@ const Button: React.FC<ButtonProps> = ({
         baseStyles,
         variants[variant],
         sizes[size],
+        fullWidth ? "w-full" : "",
         className
       )}
       {...props}
@@ -49,3 +52,5 @@ const Button: React.FC<ButtonProps> = ({
 };
 
 export default Button;
+
+export type { ButtonProps };

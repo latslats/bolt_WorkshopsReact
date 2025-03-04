@@ -4,6 +4,8 @@ export interface User {
   email: string;
   role: 'student' | 'instructor' | 'admin';
   registeredWorkshops?: string[];
+  completedWorkshops?: string[];
+  photoURL?: string;
 }
 
 export interface Workshop {

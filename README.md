@@ -38,6 +38,32 @@ Firebase services used:
 - Firestore Database
 - Analytics
 
+#### Authentication Setup
+
+The application uses Firebase Authentication with the following configuration:
+
+- **Google Authentication Only**: Users can only sign in with their Google accounts. Email/password authentication has been disabled.
+- **OAuth Scopes**:
+  - `https://www.googleapis.com/auth/userinfo.profile` - For user profile information
+  - `https://www.googleapis.com/auth/userinfo.email` - For user email
+
+New users are automatically created in Firestore upon their first sign-in with Google.
+
+### Admin Access
+
+Admin access is controlled by the `VITE_ADMIN_EMAIL` environment variable. The email address specified in this variable will automatically be granted admin privileges when they sign in with Google.
+
+To set an admin email:
+
+1. Add or update the `VITE_ADMIN_EMAIL` variable in your `.env.local` file:
+   ```
+   VITE_ADMIN_EMAIL=your-admin-email@example.com
+   ```
+
+2. When a user with this email signs in via Google, they will automatically be assigned the admin role in Firestore.
+
+3. Admin users have access to the admin dashboard at `/admin` where they can manage workshops and users.
+
 ### Using Mock Data
 
 For local development without Firebase, set `VITE_USE_MOCK_DATA=true` in your `.env.local` file. This will use the mock data provided in `src/utils/mockData.ts` instead of connecting to Firebase.
@@ -93,6 +119,23 @@ Storage Bucket: barkbuild-45559.firebasestorage.app
 2. Authentication is enabled with Email/Password and Google providers
 3. Firestore database is configured
 4. Security rules are defined in `firebase.rules`
+
+## Authentication Flow
+
+1. Users can sign up or log in from the `/login` or `/signup` pages
+2. Authentication state is managed through Redux and persisted with Firebase Auth
+3. User data is stored in Firestore with the following structure:
+   ```
+   users/{userId}
+     - name: string
+     - email: string
+     - photoURL: string (optional)
+     - role: 'student' | 'instructor' | 'admin'
+     - registeredWorkshops: string[] (workshop IDs)
+     - completedWorkshops: string[] (workshop IDs)
+     - createdAt: timestamp
+   ```
+4. Protected routes require authentication and redirect to the login page if the user is not authenticated
 
 ## Admin Access
 
