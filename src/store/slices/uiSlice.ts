@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface UiState {
-  theme: 'light' | 'dark';
+  theme: 'light';
   sidebarOpen: boolean;
 }
 
@@ -14,12 +14,7 @@ const uiSlice = createSlice({
   name: 'ui',
   initialState,
   reducers: {
-    toggleTheme: (state) => {
-      state.theme = state.theme === 'light' ? 'dark' : 'light';
-    },
-    setTheme: (state, action: PayloadAction<'light' | 'dark'>) => {
-      state.theme = action.payload;
-    },
+    // Theme is now fixed to light
     toggleSidebar: (state) => {
       state.sidebarOpen = !state.sidebarOpen;
     },
@@ -29,5 +24,5 @@ const uiSlice = createSlice({
   },
 });
 
-export const { toggleTheme, setTheme, toggleSidebar, setSidebarOpen } = uiSlice.actions;
+export const { toggleSidebar, setSidebarOpen } = uiSlice.actions;
 export default uiSlice.reducer;

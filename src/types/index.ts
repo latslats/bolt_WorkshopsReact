@@ -18,6 +18,7 @@ export interface Workshop {
   capacity: number;
   registered: number;
   materials?: string[];
+  imageUrl?: string;
 }
 
 export interface AuthState {

@@ -4,7 +4,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
 import { logout } from '../../store/slices/authSlice';
 import { Menu, X, Settings } from 'lucide-react';
-import ThemeToggle from '../ui/ThemeToggle';
 import Button from '../ui/Button';
 
 const Navbar: React.FC = () => {
@@ -23,9 +22,6 @@ const Navbar: React.FC = () => {
       {/* Top banner */}
       <div className="bg-forest-green text-white-linen py-2 px-4 text-center text-sm">
         Making learning with code simpler, and better.
-        <span className="ml-4 hidden md:inline">
-          <Link to="/contact" className="text-lemon-yellow hover:underline">Get in touch</Link>
-        </span>
       </div>
       
       {/* Main navigation */}
@@ -53,8 +49,6 @@ const Navbar: React.FC = () => {
               </div>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-4">
-              <ThemeToggle />
-              
               {isAuthenticated ? (
                 <>
                   {user?.role === 'admin' && (
@@ -94,7 +88,6 @@ const Navbar: React.FC = () => {
               )}
             </div>
             <div className="-mr-2 flex items-center sm:hidden">
-              <ThemeToggle />
               <button
                 type="button"
                 className="inline-flex items-center justify-center p-2 rounded-md text-charcoal hover:text-forest-green hover:bg-moss-green/20"

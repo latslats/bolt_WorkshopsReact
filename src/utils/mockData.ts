@@ -52,7 +52,8 @@ export const mockWorkshops: Workshop[] = [
     tags: ['React', 'JavaScript', 'Frontend'],
     capacity: 20,
     registered: 15,
-    materials: ['React Docs', 'CodeSandbox']
+    materials: ['React Docs', 'CodeSandbox'],
+    imageUrl: 'https://source.unsplash.com/random/800x600/?react'
   },
   {
     id: '2',
@@ -65,7 +66,8 @@ export const mockWorkshops: Workshop[] = [
     tags: ['TypeScript', 'JavaScript', 'Programming'],
     capacity: 15,
     registered: 10,
-    materials: ['TypeScript Handbook', 'GitHub Repo']
+    materials: ['TypeScript Handbook', 'GitHub Repo'],
+    imageUrl: 'https://source.unsplash.com/random/800x600/?typescript'
   },
   {
     id: '3',
@@ -78,7 +80,8 @@ export const mockWorkshops: Workshop[] = [
     tags: ['Firebase', 'Backend', 'Database'],
     capacity: 25,
     registered: 18,
-    materials: ['Firebase Documentation', 'Sample Code']
+    materials: ['Firebase Documentation', 'Sample Code'],
+    imageUrl: 'https://source.unsplash.com/random/800x600/?firebase'
   },
   {
     id: '4',
@@ -91,7 +94,8 @@ export const mockWorkshops: Workshop[] = [
     tags: ['Design', 'UI', 'UX'],
     capacity: 30,
     registered: 25,
-    materials: ['Figma Templates', 'Design Guidelines']
+    materials: ['Figma Templates', 'Design Guidelines'],
+    imageUrl: 'https://source.unsplash.com/random/800x600/?ui-design'
   },
   {
     id: '5',
@@ -104,7 +108,8 @@ export const mockWorkshops: Workshop[] = [
     tags: ['Node.js', 'API', 'Backend'],
     capacity: 20,
     registered: 12,
-    materials: ['API Documentation', 'GitHub Repo']
+    materials: ['API Documentation', 'GitHub Repo'],
+    imageUrl: 'https://source.unsplash.com/random/800x600/?nodejs'
   }
 ];
 

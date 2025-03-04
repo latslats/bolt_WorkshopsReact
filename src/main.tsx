@@ -31,6 +31,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <Route path="workshops/:id" element={<WorkshopDetailPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="admin" element={<AdminPage />} />
+            <Route path="404" element={<NotFoundPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>
