@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, Users, Tag, ArrowUpRight } from 'lucide-react';
 import { Card, CardContent, CardFooter } from '../ui/Card';
@@ -12,38 +12,71 @@ interface WorkshopCardProps {
 const WorkshopCard: React.FC<WorkshopCardProps> = ({ workshop }) => {
   const navigate = useNavigate();
   
-  const handleClick = () => {
+  // Memoize the navigation handler
+  const handleClick = useCallback(() => {
     navigate(`/workshops/${workshop.id}`);
-  };
+  }, [navigate, workshop.id]);
   
-  // Calculate percentage of spots filled
-  const percentFilled = (workshop.registered / workshop.capacity) * 100;
+  // Calculate percentage of spots filled - memoize this calculation
+  const percentFilled = useMemo(() => 
+    (workshop.registered / workshop.capacity) * 100,
+    [workshop.registered, workshop.capacity]
+  );
   
-  // Determine status color
-  let statusColor = 'bg-spring-garden';
-  let statusText = 'Available';
-  if (percentFilled >= 90) {
-    statusColor = 'bg-red-500';
-    statusText = 'Almost Full';
-  } else if (percentFilled >= 70) {
-    statusColor = 'bg-yellow-500';
-    statusText = 'Filling Up';
-  }
+  // Determine status color - memoize this calculation
+  const { statusColor, statusText } = useMemo(() => {
+    let color = 'bg-spring-garden';
+    let text = 'Available';
+    if (percentFilled >= 90) {
+      color = 'bg-red-500';
+      text = 'Almost Full';
+    } else if (percentFilled >= 70) {
+      color = 'bg-yellow-500';
+      text = 'Filling Up';
+    }
+    return { statusColor: color, statusText: text };
+  }, [percentFilled]);
   
-  // Generate a random gradient for the card based on the workshop level
-  const gradients = {
-    'Beginner': 'from-spring-garden/20 to-lemon-yellow/20',
-    'Intermediate': 'from-forest-green/20 to-spring-garden/20',
-    'Advanced': 'from-moss-green/20 to-forest-green/20',
-  };
-  
-  const gradient = gradients[workshop.level as keyof typeof gradients] || 'from-spring-garden/20 to-lemon-yellow/20';
+  // Generate a random gradient for the card based on the workshop level - memoize this
+  const gradient = useMemo(() => {
+    const gradients = {
+      'Beginner': 'from-spring-garden/20 to-lemon-yellow/20',
+      'Intermediate': 'from-forest-green/20 to-spring-garden/20',
+      'Advanced': 'from-moss-green/20 to-forest-green/20',
+    };
+    return gradients[workshop.level as keyof typeof gradients] || 'from-spring-garden/20 to-lemon-yellow/20';
+  }, [workshop.level]);
   
   // Generate a fallback image URL based on the workshop title or tags
-  const getFallbackImageUrl = () => {
+  const getFallbackImageUrl = useCallback(() => {
     const searchTerm = workshop.tags[0] || 'coding';
     return `https://source.unsplash.com/random/800x600/?${encodeURIComponent(searchTerm)}`;
-  };
+  }, [workshop.tags]);
+  
+  // Memoize the image error handler
+  const handleImageError = useCallback((e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    // If image fails to load, use a fallback
+    const target = e.target as HTMLImageElement;
+    target.onerror = null; // Prevent infinite loop
+    target.src = `https://source.unsplash.com/random/800x600/?${encodeURIComponent(workshop.level.toLowerCase())}`;
+  }, [workshop.level]);
+  
+  // Memoize the tags rendering
+  const tagsElement = useMemo(() => (
+    <div className="flex flex-wrap gap-1">
+      {workshop.tags.map((tag, index) => (
+        <span key={index} className="inline-block bg-white shadow-sm text-forest-green px-2 py-0.5 text-xs rounded-full">
+          {tag}
+        </span>
+      ))}
+    </div>
+  ), [workshop.tags]);
+  
+  // Format the date once
+  const formattedDate = useMemo(() => 
+    new Date(workshop.date).toLocaleDateString(),
+    [workshop.date]
+  );
   
   return (
     <Card className="h-full flex flex-col overflow-hidden transition-all duration-300 hover:shadow-xl bg-gradient-to-br border-0 shadow-lg">
@@ -53,12 +86,8 @@ const WorkshopCard: React.FC<WorkshopCardProps> = ({ workshop }) => {
           src={workshop.imageUrl || getFallbackImageUrl()} 
           alt={workshop.title} 
           className="w-full h-48 object-cover relative z-10"
-          onError={(e) => {
-            // If image fails to load, use a fallback
-            const target = e.target as HTMLImageElement;
-            target.onerror = null; // Prevent infinite loop
-            target.src = `https://source.unsplash.com/random/800x600/?${encodeURIComponent(workshop.level.toLowerCase())}`;
-          }}
+          onError={handleImageError}
+          loading="lazy" // Add lazy loading for images
         />
         <div className="absolute top-0 right-0 m-3 px-3 py-1 bg-white shadow-md text-forest-green text-xs font-bold rounded-full z-20">
           {workshop.level}
@@ -74,7 +103,7 @@ const WorkshopCard: React.FC<WorkshopCardProps> = ({ workshop }) => {
             <div className="flex items-center justify-center w-8 h-8 rounded-full bg-forest-green/10 mr-3">
               <Calendar className="h-4 w-4 text-forest-green" />
             </div>
-            <span>{new Date(workshop.date).toLocaleDateString()}</span>
+            <span>{formattedDate}</span>
           </div>
           <div className="flex items-center">
             <div className="flex items-center justify-center w-8 h-8 rounded-full bg-forest-green/10 mr-3">
@@ -92,13 +121,7 @@ const WorkshopCard: React.FC<WorkshopCardProps> = ({ workshop }) => {
             <div className="flex items-center justify-center w-8 h-8 rounded-full bg-forest-green/10 mr-3 self-start">
               <Tag className="h-4 w-4 text-forest-green" />
             </div>
-            <div className="flex flex-wrap gap-1">
-              {workshop.tags.map((tag, index) => (
-                <span key={index} className="inline-block bg-white shadow-sm text-forest-green px-2 py-0.5 text-xs rounded-full">
-                  {tag}
-                </span>
-              ))}
-            </div>
+            {tagsElement}
           </div>
         </div>
       </CardContent>
@@ -124,4 +147,5 @@ const WorkshopCard: React.FC<WorkshopCardProps> = ({ workshop }) => {
   );
 };
 
-export default WorkshopCard;
+// Use React.memo to prevent unnecessary re-renders
+export default React.memo(WorkshopCard);

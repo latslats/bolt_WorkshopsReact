@@ -11,10 +11,12 @@
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.6.0",
+    "@types/lodash": "^4.17.16",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "firebase": "^11.4.0",
     "framer-motion": "^12.4.7",
+    "lodash": "^4.17.21",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

@@ -1,38 +1,88 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setFilter, clearFilters } from '../../store/slices/workshopsSlice';
 import { RootState } from '../../store';
 import { Filter, SortAsc, X } from 'lucide-react';
 import Button from '../ui/Button';
+import { debounce } from 'lodash';
 
 const WorkshopFilters: React.FC = () => {
   const dispatch = useDispatch();
   const { filters } = useSelector((state: RootState) => state.workshops);
   
-  const difficulties = ['Beginner', 'Intermediate', 'Advanced'];
-  const topics = ['Python', 'JavaScript', 'AI', 'Web Development', 'Data Science'];
+  // Memoize these arrays to prevent recreating them on each render
+  const difficulties = useMemo(() => ['Beginner', 'Intermediate', 'Advanced'], []);
+  const topics = useMemo(() => ['Python', 'JavaScript', 'AI', 'Web Development', 'Data Science'], []);
   
-  const handleDifficultyChange = (difficulty: string | null) => {
+  // Use useCallback to memoize these functions
+  const handleDifficultyChange = useCallback((difficulty: string | null) => {
     dispatch(setFilter({ key: 'difficulty', value: difficulty }));
-  };
+  }, [dispatch]);
   
-  const handleTopicChange = (topic: string | null) => {
+  const handleTopicChange = useCallback((topic: string | null) => {
     dispatch(setFilter({ key: 'topic', value: topic }));
-  };
+  }, [dispatch]);
   
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleSortChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     dispatch(setFilter({ key: 'sortBy', value: e.target.value }));
-  };
+  }, [dispatch]);
   
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch(setFilter({ key: 'search', value: e.target.value }));
-  };
+  // Debounce the search to prevent excessive filtering while typing
+  const debouncedSearch = useMemo(
+    () => 
+      debounce((value: string) => {
+        dispatch(setFilter({ key: 'search', value }));
+      }, 300),
+    [dispatch]
+  );
   
-  const handleClearFilters = () => {
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    debouncedSearch(e.target.value);
+  }, [debouncedSearch]);
+  
+  const handleClearFilters = useCallback(() => {
     dispatch(clearFilters());
-  };
+  }, [dispatch]);
   
   const hasActiveFilters = filters.difficulty || filters.topic || filters.search;
+
+  // Memoize the difficulty buttons
+  const difficultyButtons = useMemo(() => (
+    <div className="flex flex-wrap gap-2">
+      {difficulties.map((difficulty) => (
+        <button
+          key={difficulty}
+          onClick={() => handleDifficultyChange(filters.difficulty === difficulty ? null : difficulty)}
+          className={`px-3 py-1 rounded-full text-xs font-medium ${
+            filters.difficulty === difficulty
+              ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400 border-2 border-indigo-500'
+              : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 border-2 border-transparent'
+          }`}
+        >
+          {difficulty}
+        </button>
+      ))}
+    </div>
+  ), [difficulties, filters.difficulty, handleDifficultyChange]);
+
+  // Memoize the topic buttons
+  const topicButtons = useMemo(() => (
+    <div className="flex flex-wrap gap-2">
+      {topics.map((topic) => (
+        <button
+          key={topic}
+          onClick={() => handleTopicChange(filters.topic === topic ? null : topic)}
+          className={`px-3 py-1 rounded-full text-xs font-medium ${
+            filters.topic === topic
+              ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400 border-2 border-indigo-500'
+              : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 border-2 border-transparent'
+          }`}
+        >
+          {topic}
+        </button>
+      ))}
+    </div>
+  ), [topics, filters.topic, handleTopicChange]);
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
@@ -62,7 +112,7 @@ const WorkshopFilters: React.FC = () => {
             type="text"
             id="search"
             placeholder="Search workshops..."
-            value={filters.search}
+            defaultValue={filters.search}
             onChange={handleSearchChange}
             className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm"
           />
@@ -72,42 +122,14 @@ const WorkshopFilters: React.FC = () => {
           <label htmlFor="difficulty" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Difficulty
           </label>
-          <div className="flex flex-wrap gap-2">
-            {difficulties.map((difficulty) => (
-              <button
-                key={difficulty}
-                onClick={() => handleDifficultyChange(filters.difficulty === difficulty ? null : difficulty)}
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  filters.difficulty === difficulty
-                    ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400 border-2 border-indigo-500'
-                    : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 border-2 border-transparent'
-                }`}
-              >
-                {difficulty}
-              </button>
-            ))}
-          </div>
+          {difficultyButtons}
         </div>
         
         <div>
           <label htmlFor="topic" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Topic
           </label>
-          <div className="flex flex-wrap gap-2">
-            {topics.map((topic) => (
-              <button
-                key={topic}
-                onClick={() => handleTopicChange(filters.topic === topic ? null : topic)}
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  filters.topic === topic
-                    ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400 border-2 border-indigo-500'
-                    : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 border-2 border-transparent'
-                }`}
-              >
-                {topic}
-              </button>
-            ))}
-          </div>
+          {topicButtons}
         </div>
         
         <div>
@@ -133,4 +155,4 @@ const WorkshopFilters: React.FC = () => {
   );
 };
 
-export default WorkshopFilters;
+export default React.memo(WorkshopFilters);

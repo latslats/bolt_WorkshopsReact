@@ -41,8 +41,8 @@ const workshopsSlice = createSlice({
       state.loading = false;
     },
     fetchWorkshopsFailure(state, action: PayloadAction<string>) {
-      state.loading = false;
       state.error = action.payload;
+      state.loading = false;
     },
     filterWorkshops(state, action: PayloadAction<{ 
       search?: string; 
@@ -82,7 +82,38 @@ const workshopsSlice = createSlice({
       };
       
       // Apply filters immediately
-      // This would typically call filterWorkshops logic
+      const { search, difficulty, topic } = state.filters;
+      
+      state.filteredWorkshops = state.workshops.filter(workshop => {
+        // Filter by search term
+        if (search && !workshop.title.toLowerCase().includes(search.toLowerCase()) && 
+            !workshop.description.toLowerCase().includes(search.toLowerCase())) {
+          return false;
+        }
+        
+        // Filter by difficulty (level)
+        if (difficulty && workshop.level !== difficulty) {
+          return false;
+        }
+        
+        // Filter by topic (tag)
+        if (topic && !workshop.tags.includes(topic)) {
+          return false;
+        }
+        
+        return true;
+      });
+      
+      // Apply sorting
+      if (state.filters.sortBy === 'date') {
+        state.filteredWorkshops.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      } else if (state.filters.sortBy === 'difficulty') {
+        const difficultyOrder = { 'Beginner': 1, 'Intermediate': 2, 'Advanced': 3 };
+        state.filteredWorkshops.sort((a, b) => 
+          (difficultyOrder[a.level as keyof typeof difficultyOrder] || 0) - 
+          (difficultyOrder[b.level as keyof typeof difficultyOrder] || 0)
+        );
+      }
     },
     clearFilters(state) {
       state.filters = {

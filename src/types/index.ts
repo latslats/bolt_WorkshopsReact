@@ -38,4 +38,10 @@ export interface WorkshopsState {
   filteredWorkshops: Workshop[];
   loading: boolean;
   error: string | null;
+  filters: {
+    search: string;
+    difficulty: string | null;
+    topic: string | null;
+    sortBy: 'date' | 'difficulty';
+  };
 }

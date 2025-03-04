@@ -16,26 +16,27 @@ A workshop management application built with React, TypeScript, and Firebase.
    ```
    npm install
    ```
-3. Create a `.env.local` file in the root directory with the following variables:
-   ```
-   VITE_FIREBASE_API_KEY=your_api_key
-   VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
-   VITE_FIREBASE_PROJECT_ID=your_project_id
-   VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
-   VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
-   VITE_FIREBASE_APP_ID=your_app_id
-   VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
-   
-   # Set to true to use mock data instead of Firebase
-   VITE_USE_MOCK_DATA=true
-   
-   # Default admin email
-   VITE_ADMIN_EMAIL=julio.v@earthrated.com
-   ```
+3. The project includes pre-configured environment files:
+   - `.env.local` - For local development with Firebase integration
+   - `.env.production` - For production deployment
+
 4. Start the development server:
    ```
    npm run dev
    ```
+
+### Firebase Configuration
+
+The application is configured to use the following Firebase project:
+
+```
+Project ID: barkbuild-45559
+```
+
+Firebase services used:
+- Authentication (Email/Password and Google providers)
+- Firestore Database
+- Analytics
 
 ### Using Mock Data
 
@@ -59,17 +60,13 @@ docker run -p 80:80 bark-build-lab
 
 ### Environment Variables for Production
 
-For production deployment, you'll need to set the following environment variables:
+The production environment is pre-configured in `.env.production` with the following Firebase project details:
 
-- `VITE_FIREBASE_API_KEY`
-- `VITE_FIREBASE_AUTH_DOMAIN`
-- `VITE_FIREBASE_PROJECT_ID`
-- `VITE_FIREBASE_STORAGE_BUCKET`
-- `VITE_FIREBASE_MESSAGING_SENDER_ID`
-- `VITE_FIREBASE_APP_ID`
-- `VITE_FIREBASE_MEASUREMENT_ID`
-- `VITE_USE_MOCK_DATA` (set to "false" for production)
-- `VITE_ADMIN_EMAIL`
+```
+Project ID: barkbuild-45559
+Auth Domain: barkbuild-45559.firebaseapp.com
+Storage Bucket: barkbuild-45559.firebasestorage.app
+```
 
 ## GCP Deployment
 
@@ -77,25 +74,25 @@ For production deployment, you'll need to set the following environment variable
 
 1. Build and push the Docker image to Google Container Registry:
    ```bash
-   gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/bark-build-lab
+   gcloud builds submit --tag gcr.io/barkbuild-45559/bark-build-lab
    ```
 
 2. Deploy to Cloud Run:
    ```bash
    gcloud run deploy bark-build-lab \
-     --image gcr.io/YOUR_PROJECT_ID/bark-build-lab \
+     --image gcr.io/barkbuild-45559/bark-build-lab \
      --platform managed \
-     --allow-unauthenticated \
-     --set-env-vars="VITE_FIREBASE_API_KEY=your_api_key,VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain,..."
+     --allow-unauthenticated
    ```
+
+   Note: Environment variables are already configured in the Docker image from `.env.production`.
 
 ## Firebase Setup
 
-1. Create a Firebase project at [https://console.firebase.google.com/](https://console.firebase.google.com/)
-2. Enable Authentication with Email/Password and Google providers
-3. Create a Firestore database
-4. Deploy the security rules from `firebase.rules`
-5. Add your application to the Firebase project and get the configuration values for your environment variables
+1. The Firebase project is already set up at [https://console.firebase.google.com/](https://console.firebase.google.com/)
+2. Authentication is enabled with Email/Password and Google providers
+3. Firestore database is configured
+4. Security rules are defined in `firebase.rules`
 
 ## Admin Access
 
