@@ -3,11 +3,18 @@ import { Outlet, useLocation } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import useAuth from './hooks/useAuth';
 import { setupMockData } from './utils/mockData';
+import { ensureFirebaseConnection } from './utils/firebaseConnectionCheck';
 
 const App: React.FC = () => {
   // Initialize authentication
   const auth = useAuth();
   const location = useLocation();
+  
+  // Check Firebase connection on app start (non-blocking)
+  useEffect(() => {
+    // This is now a synchronous check that won't block rendering
+    ensureFirebaseConnection();
+  }, []);
   
   // Setup mock data for development
   useEffect(() => {

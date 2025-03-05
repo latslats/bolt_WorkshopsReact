@@ -1,21 +1,51 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user is accessing their own data
+    function isUser(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Helper function to check if user is an admin
+    function isAdmin() {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // System health checks collection - needed for connectivity tests
+    match /system_health_checks/{docId} {
+      allow read: if isAuthenticated();
+      // Only admins can write to health check documents
+      allow write: if isAdmin();
+    }
+    
     // Allow public read access to workshops
     match /workshops/{workshopId} {
       allow read: if true;
-      allow write: if request.auth != null && 
-                    get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      allow write: if isAuthenticated() && isAdmin();
     }
     
     // User data rules
     match /users/{userId} {
-      // Users can read and write their own data
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // Allow users to read their own data
+      allow read: if isUser(userId);
       
-      // Admins can read and write all user data
-      allow read, write: if request.auth != null && 
-                          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      // Always allow authenticated users to create their own document during first login
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Allow users to update their own data, but not change their role
+      allow update: if isUser(userId) && 
+                     (!('role' in request.resource.data) || 
+                      request.resource.data.role == resource.data.role);
+      
+      // Allow admins to read and write all user data
+      allow read, write: if isAdmin();
     }
     
     // Default deny

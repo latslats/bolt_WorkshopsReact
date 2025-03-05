@@ -1,19 +1,70 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { setUser, setError } from '../../store/slices/authSlice';
 import Button from '../ui/Button';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, RefreshCw, WifiOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { signInWithGoogle } from '../../services/authService';
+import { signInWithGoogle, getRedirectResult, refreshAuthToken } from '../../services/authService';
+import { auth } from '../../config/firebase';
+import { resetFirestoreConnection } from '../../utils/firebaseConnectionCheck';
 
 const LoginForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState('');
+  const [isResettingConnection, setIsResettingConnection] = useState(false);
   
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  // Check for redirect result on component mount
+  useEffect(() => {
+    const checkRedirectResult = async () => {
+      // Check if there's a pending redirect authentication
+      const isPendingRedirect = localStorage.getItem('auth_redirect_pending') === 'true';
+      
+      if (isPendingRedirect) {
+        setLoading(true);
+        const toastId = toast.loading('Completing Google sign-in...');
+        
+        try {
+          console.log('Checking for redirect result');
+          const result = await getRedirectResult();
+          
+          // Clear the pending flag
+          localStorage.removeItem('auth_redirect_pending');
+          
+          if (result && result.user) {
+            console.log('Redirect authentication successful');
+            
+            // Refresh token immediately to prevent Firestore token issues
+            console.log('Refreshing auth token after redirect login');
+            await refreshAuthToken();
+            
+            // The auth state listener will handle updating the user state
+            toast.success('Logged in with Google successfully!', { id: toastId });
+            navigate('/dashboard');
+          } else {
+            console.log('No redirect result found');
+            toast.error('Google sign-in was not completed', { id: toastId });
+          }
+        } catch (error: any) {
+          console.error('Error processing redirect result:', error);
+          localStorage.removeItem('auth_redirect_pending');
+          
+          const errorMessage = error.message || 'Failed to complete Google sign-in';
+          setFormError(errorMessage);
+          dispatch(setError(errorMessage));
+          toast.error(errorMessage, { id: toastId });
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    
+    checkRedirectResult();
+  }, [dispatch, navigate]);
 
   const handleGoogleLogin = async () => {
     setLoading(true);
@@ -26,6 +77,8 @@ const LoginForm: React.FC = () => {
       console.log('Attempting to sign in with Google');
       const userData = await signInWithGoogle();
       console.log('Google sign in successful, user data:', userData);
+      
+      // Firestore token is refreshed inside signInWithGoogle now
       dispatch(setUser(userData));
       
       // Update the toast notification
@@ -35,13 +88,125 @@ const LoginForm: React.FC = () => {
       console.error('Google login error:', error);
       const errorMessage = error.message || 'Failed to login with Google. Please try again.';
       
+      // Special case for redirect initiated - don't show as error
+      if (errorMessage.includes('Redirecting to Google')) {
+        toast.loading('Redirecting to Google sign-in...', { id: toastId });
+        return; // Don't set error state for redirect
+      }
+      
       setFormError(errorMessage);
       dispatch(setError(errorMessage));
-      
-      // Update the toast notification with the error
       toast.error(errorMessage, { id: toastId });
     } finally {
-      setLoading(false);
+      // Only set loading to false if we're not redirecting
+      if (!localStorage.getItem('auth_redirect_pending')) {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleRetry = () => {
+    handleGoogleLogin();
+  };
+  
+  const handleConnectionReset = async () => {
+    setIsResettingConnection(true);
+    const toastId = toast.loading('Resetting connection...');
+    
+    try {
+      // Check if user is authenticated
+      const isAuthenticated = !!auth.currentUser;
+      console.log('Connection reset initiated. User authenticated:', isAuthenticated);
+      
+      // If we have a 400 Bad Request error, try a more aggressive approach
+      if (formError.includes('400') || formError.includes('Bad Request')) {
+        console.log('Detected 400 Bad Request error, using aggressive reset approach');
+        
+        // Clear Firebase-related localStorage items
+        Object.keys(localStorage).forEach(key => {
+          if (key.includes('firebase') || key.includes('firestore')) {
+            localStorage.removeItem(key);
+          }
+        });
+        console.log('Cleared Firebase localStorage items');
+        
+        // Force token refresh if user is logged in
+        if (auth.currentUser) {
+          try {
+            await auth.currentUser.getIdToken(true);
+            console.log('Forced token refresh for 400 Bad Request error');
+          } catch (tokenError) {
+            console.warn('Token refresh failed during aggressive reset:', tokenError);
+          }
+        }
+      }
+      
+      // Reset Firestore connection
+      await resetFirestoreConnection();
+      
+      // Refresh token if user is logged in
+      if (auth.currentUser) {
+        try {
+          const token = await refreshAuthToken();
+          if (token) {
+            console.log('Auth token refreshed successfully during connection reset');
+          } else {
+            console.warn('Auth token refresh returned null during connection reset');
+            // Show a warning but don't treat as error
+            toast.error('Auth token refresh may not have completed successfully', { 
+              id: toastId,
+              style: { backgroundColor: '#FFF9C4', color: '#5D4037' } // Warning style
+            });
+            return; // Exit early but don't show error
+          }
+        } catch (tokenError: Error | unknown) {
+          const errorMessage = tokenError instanceof Error ? tokenError.message : 'Unknown error';
+          console.error('Error refreshing auth token:', tokenError);
+          toast.error(`Token refresh error: ${errorMessage}`, { id: toastId });
+          return; // Exit early with error
+        }
+      }
+      
+      toast.success('Connection reset successfully', { id: toastId });
+      
+      // Clear any previous errors
+      setFormError('');
+      
+      // If user is authenticated, try a test Firestore read to verify connection
+      if (isAuthenticated) {
+        try {
+          // Import needed to avoid circular dependencies
+          const { collection, doc, getDoc } = await import('firebase/firestore');
+          const { db } = await import('../../config/firebase');
+          
+          const testRef = doc(collection(db, 'system_health_checks'), 'connection_test');
+          await getDoc(testRef);
+          console.log('Firestore test read successful after connection reset');
+          
+          // If we were previously having 400 Bad Request errors, suggest a page refresh
+          if (formError.includes('400') || formError.includes('Bad Request')) {
+            toast.success('Connection fixed! You may need to refresh the page for all features to work properly.', {
+              duration: 6000 // Show for longer
+            });
+          }
+        } catch (testError: Error | unknown) {
+          const errorMessage = testError instanceof Error ? testError.message : 'Unknown error';
+          console.warn('Firestore test read failed after connection reset:', errorMessage);
+          
+          // If we still have 400 Bad Request errors, suggest more drastic measures
+          if (errorMessage.includes('400') || errorMessage.includes('Bad Request')) {
+            toast.error('Connection issues persist. Try refreshing the page or clearing your browser cache.', {
+              duration: 6000 // Show for longer
+            });
+          }
+        }
+      }
+    } catch (error: Error | unknown) {
+      console.error('Error resetting connection:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`Failed to reset connection: ${errorMessage}`, { id: toastId });
+    } finally {
+      setIsResettingConnection(false);
     }
   };
 
@@ -61,6 +226,16 @@ const LoginForm: React.FC = () => {
         <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-md flex items-center">
           <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
           <span>{formError}</span>
+          
+          {(formError.includes('network') || formError.includes('connection') || formError.includes('404') || formError.includes('offline')) && (
+            <button 
+              onClick={handleRetry}
+              className="ml-auto flex items-center text-red-700 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+            >
+              <RefreshCw className="h-4 w-4 mr-1" />
+              <span>Retry</span>
+            </button>
+          )}
         </div>
       )}
       
@@ -96,6 +271,18 @@ const LoginForm: React.FC = () => {
             </>
           )}
         </Button>
+      </div>
+
+      {/* Connection reset button - helps users fix Firestore connection issues */}
+      <div className="mt-4 text-center">
+        <button
+          onClick={handleConnectionReset}
+          disabled={isResettingConnection}
+          className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+        >
+          <WifiOff className="h-4 w-4 mr-1" />
+          {isResettingConnection ? 'Resetting connection...' : 'Having connection issues? Click here'}
+        </button>
       </div>
 
       <div className="mt-6 text-center">
