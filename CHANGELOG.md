@@ -2,6 +2,12 @@
 
 All notable changes to the Bark & Build Lab project will be documented in this file.
 
+## [1.6.7] - 2023-03-07
+
+### Changed
+- Removed Files page and related functionality to simplify the application
+- Streamlined navigation by removing Files link from both desktop and mobile menus
+
 ## [1.6.6] - 2023-03-07
 
 ### Fixed

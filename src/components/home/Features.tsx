@@ -6,21 +6,21 @@ const features = [
   {
     name: 'Expert-led workshops',
     description:
-      'Learn from industry professionals with years of experience in their fields.',
+      'Learn from subject matter experts inside ER.',
     icon: Code,
     color: 'bg-gradient-to-r from-forest-green to-spring-garden',
   },
   {
     name: 'Community-driven',
     description:
-      'Join a supportive community of developers at all skill levels.',
+      'Join a supportive community of learners at all skill levels.',
     icon: Users,
     color: 'bg-gradient-to-r from-spring-garden to-lemon-yellow',
   },
   {
-    name: 'Regular sessions',
+    name: 'Real-world projects',
     description:
-      'New workshops every week covering the latest technologies and practices.',
+      'Work on real-world projects that are relevant to your career.',
     icon: Calendar,
     color: 'bg-gradient-to-r from-moss-green to-forest-green',
   },
@@ -45,10 +45,10 @@ const Features: React.FC = () => {
         >
           <h2 className="text-base text-spring-garden font-semibold tracking-wide uppercase">Why Choose Us</h2>
           <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-forest-green sm:text-4xl">
-            Not your average coding platform
+            Not your average learning platform
           </p>
           <p className="mt-4 max-w-2xl text-xl text-charcoal lg:mx-auto">
-            We're committed to providing high-quality, accessible coding education for everyone.
+            We're committed to providing value via accessible education for everyone.
           </p>
         </motion.div>
 
