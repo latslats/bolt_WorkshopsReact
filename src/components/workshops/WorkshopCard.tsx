@@ -1,10 +1,12 @@
 import React, { useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Clock } from 'lucide-react';
+import { Calendar, Clock, Users } from 'lucide-react';
 import Button from '../ui/Button';
 import { Workshop } from '../../types';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { registerForWorkshop } from '../../store/slices/workshopsSlice';
+import { RootState } from '../../store';
+import RegisteredUsers from './RegisteredUsers';
 
 interface WorkshopCardProps {
   workshop: Workshop;
@@ -13,6 +15,12 @@ interface WorkshopCardProps {
 const WorkshopCard: React.FC<WorkshopCardProps> = ({ workshop }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { user } = useSelector((state: RootState) => state.auth);
+  
+  // Check if current user is registered
+  const isRegistered = useMemo(() => {
+    return user && workshop.registrations ? workshop.registrations.includes(user.id) : false;
+  }, [user, workshop.registrations]);
   
   // Memoize the navigation handler
   const handleClick = useCallback(() => {
@@ -31,17 +39,14 @@ const WorkshopCard: React.FC<WorkshopCardProps> = ({ workshop }) => {
   );
   
   // Determine status color - memoize this calculation
-  const { statusColor, statusText } = useMemo(() => {
-    let color = 'bg-spring-garden';
+  const statusText = useMemo(() => {
     let text = 'Available';
     if (percentFilled >= 90) {
-      color = 'bg-red-500';
       text = 'Almost Full';
     } else if (percentFilled >= 70) {
-      color = 'bg-yellow-500';
       text = 'Filling Up';
     }
-    return { statusColor: color, statusText: text };
+    return text;
   }, [percentFilled]);
   
   // Generate a random gradient for the card based on the workshop level - memoize this
@@ -151,6 +156,17 @@ const WorkshopCard: React.FC<WorkshopCardProps> = ({ workshop }) => {
             )}
           </div>
           
+          {/* Registered Users */}
+          {workshop.registrations && workshop.registrations.length > 0 && (
+            <div className="mt-2">
+              <div className="flex items-center text-gray-600 dark:text-gray-300 text-xs mb-1">
+                <Users className="h-3 w-3 mr-1 text-forest-green dark:text-moss-green" />
+                <span>Registered Participants</span>
+              </div>
+              <RegisteredUsers userIds={workshop.registrations} maxDisplay={3} />
+            </div>
+          )}
+          
           {/* Registration Status */}
           <div className="mt-2">
             <div className="flex justify-between items-center text-xs text-gray-600 dark:text-gray-300 mb-1">
@@ -174,17 +190,23 @@ const WorkshopCard: React.FC<WorkshopCardProps> = ({ workshop }) => {
           {/* Action Button */}
           <Button 
             className={`w-full mt-3 ${
-              workshop.registered >= workshop.capacity 
-                ? 'bg-gray-400 cursor-not-allowed' 
-                : 'bg-forest-green hover:bg-spring-garden'
+              isRegistered
+                ? 'bg-moss-green cursor-not-allowed'
+                : workshop.registered >= workshop.capacity 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-forest-green hover:bg-spring-garden'
             } text-white`}
-            disabled={workshop.registered >= workshop.capacity}
+            disabled={workshop.registered >= workshop.capacity || isRegistered}
             onClick={(e) => {
               e.stopPropagation();
               handleRegister();
             }}
           >
-            {workshop.registered >= workshop.capacity ? 'Workshop Full' : 'Register Now'}
+            {isRegistered
+              ? 'Already Registered'
+              : workshop.registered >= workshop.capacity 
+                ? 'Workshop Full' 
+                : 'Register Now'}
           </Button>
         </div>
       </div>

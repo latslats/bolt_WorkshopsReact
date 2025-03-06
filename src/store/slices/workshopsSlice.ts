@@ -128,13 +128,43 @@ const workshopsSlice = createSlice({
       const workshopId = action.payload;
       const workshop = state.workshops.find(w => w.id === workshopId);
       
-      if (workshop && workshop.registered < workshop.capacity) {
+      // Get current user from localStorage
+      const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+      
+      if (workshop && workshop.registered < workshop.capacity && currentUser?.id) {
+        // Increment registered count
         workshop.registered += 1;
         
-        // Update localStorage
-        const workshops = mockWorkshops;
-        const updatedWorkshops = workshops.map(w => 
-          w.id === workshopId ? { ...w, registered: w.registered + 1 } : w
+        // Add user to registrations array if not already there
+        if (!workshop.registrations) {
+          workshop.registrations = [];
+        }
+        
+        if (!workshop.registrations.includes(currentUser.id)) {
+          workshop.registrations.push(currentUser.id);
+        }
+        
+        // Update user's registeredWorkshops in localStorage
+        if (currentUser.registeredWorkshops) {
+          if (!currentUser.registeredWorkshops.includes(workshopId)) {
+            currentUser.registeredWorkshops.push(workshopId);
+          }
+        } else {
+          currentUser.registeredWorkshops = [workshopId];
+        }
+        
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        
+        // Update localStorage for workshops
+        const workshops = JSON.parse(localStorage.getItem('workshops') || '[]');
+        const updatedWorkshops = workshops.map((w: Workshop) => 
+          w.id === workshopId 
+            ? { 
+                ...w, 
+                registered: w.registered + 1,
+                registrations: workshop.registrations 
+              } 
+            : w
         );
         localStorage.setItem('workshops', JSON.stringify(updatedWorkshops));
       }

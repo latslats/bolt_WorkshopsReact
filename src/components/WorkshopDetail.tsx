@@ -1,20 +1,49 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Loader2, AlertCircle, ChevronLeft, Calendar, User, FileText, GraduationCap, Clock, CheckCircle } from 'lucide-react';
 import Button from '../components/ui/Button';
 import { formatDate } from '../utils/dateUtils';
 import { Workshop } from '../types';
+import RegisteredUsers from './workshops/RegisteredUsers';
+import { useDispatch, useSelector } from 'react-redux';
+import { registerForWorkshop } from '../store/slices/workshopsSlice';
+import { RootState } from '../store';
 
 const WorkshopDetail: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [workshop, setWorkshop] = useState<Workshop | null>(null);
   const [isRegistered, setIsRegistered] = useState(false);
+  
+  // Get workshops from Redux store
+  const { workshops, loading: workshopsLoading } = useSelector((state: RootState) => state.workshops);
+  const { user } = useSelector((state: RootState) => state.auth);
+  
+  useEffect(() => {
+    if (!workshopsLoading && id) {
+      const foundWorkshop = workshops.find(w => w.id === id);
+      if (foundWorkshop) {
+        setWorkshop(foundWorkshop);
+        
+        // Check if current user is registered
+        if (user && foundWorkshop.registrations && foundWorkshop.registrations.includes(user.id)) {
+          setIsRegistered(true);
+        }
+      } else {
+        setError('Workshop not found');
+      }
+      setLoading(false);
+    }
+  }, [id, workshops, workshopsLoading, user]);
 
   const handleRegister = () => {
-    // Implement the registration logic here
-    setIsRegistered(true);
+    if (id) {
+      dispatch(registerForWorkshop(id));
+      setIsRegistered(true);
+    }
   };
 
   return (
@@ -94,6 +123,16 @@ const WorkshopDetail: React.FC = () => {
                     <p className="text-sm text-moss-green dark:text-moss-green/80 text-center mt-2">
                       You're all set! We'll send you a reminder before the workshop.
                     </p>
+                  )}
+                  
+                  {/* Registered Users Section */}
+                  {workshop.registrations && workshop.registrations.length > 0 && (
+                    <div className="mt-6">
+                      <h4 className="text-md font-semibold text-forest-green dark:text-moss-green mb-3">
+                        Registered Participants
+                      </h4>
+                      <RegisteredUsers userIds={workshop.registrations} maxDisplay={5} />
+                    </div>
                   )}
                 </div>
               </div>
