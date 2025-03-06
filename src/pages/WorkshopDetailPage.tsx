@@ -6,13 +6,17 @@ import WorkshopDetail from '../components/workshops/WorkshopDetail';
 import { Workshop } from '../types';
 import { motion } from 'framer-motion';
 import Button from '../components/ui/Button';
+import { registerForWorkshopAsync } from '../store/slices/workshopsSlice';
+import { AppDispatch } from '../store';
 
 const WorkshopDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { workshops, loading, error } = useSelector((state: RootState) => state.workshops);
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   const [workshop, setWorkshop] = useState<Workshop | null>(null);
+  const [isRegistering, setIsRegistering] = useState(false);
   
   useEffect(() => {
     if (id && workshops.length > 0) {
@@ -22,6 +26,26 @@ const WorkshopDetailPage: React.FC = () => {
       }
     }
   }, [id, workshops]);
+  
+  const handleRegister = async () => {
+    if (!isAuthenticated) {
+      // Redirect to login if not authenticated
+      navigate('/login', { state: { from: `/workshop/${id}` } });
+      return;
+    }
+    
+    if (id) {
+      try {
+        setIsRegistering(true);
+        await dispatch(registerForWorkshopAsync(id));
+        // Success! The workshop will be updated in the Redux store
+      } catch (error) {
+        console.error('Failed to register for workshop:', error);
+      } finally {
+        setIsRegistering(false);
+      }
+    }
+  };
   
   if (loading) {
     return (
@@ -68,11 +92,7 @@ const WorkshopDetailPage: React.FC = () => {
         
         <WorkshopDetail 
           workshop={workshop} 
-          onRegister={() => {
-            // Handle workshop registration
-            alert(`Registration for ${workshop.title} will be implemented soon!`);
-            // You would typically dispatch an action here to register the user
-          }} 
+          onRegister={handleRegister} 
         />
       </motion.div>
     </div>

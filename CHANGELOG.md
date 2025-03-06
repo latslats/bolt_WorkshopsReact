@@ -2,6 +2,74 @@
 
 All notable changes to the Bark & Build Lab project will be documented in this file.
 
+## [1.6.6] - 2023-03-07
+
+### Fixed
+- Fixed workshop registration functionality that was showing an alert instead of actually registering
+- Unified workshop detail components to use the same registration logic
+- Enhanced workshop registration UI with better loading states and feedback
+- Added registration progress bar to show available spots
+
+## [1.6.5] - 2023-03-07
+
+### Added
+- Implemented workshop registration functionality with Firebase integration
+- Added proper user registration tracking in Firestore
+- Enhanced workshop registration UI with loading states
+
+### Fixed
+- Fixed issue with workshop registration not being saved to Firebase
+- Improved error handling during workshop registration
+- Added authentication check before registration
+
+## [1.6.4] - 2023-03-07
+
+### Fixed
+- Fixed issue with admin button disappearing after page refresh
+- Improved admin role detection and persistence
+- Enhanced user authentication flow to properly maintain admin status
+- Removed unnecessary Firestore connection resets that were causing authentication issues
+
+## [1.6.3] - 2023-03-07
+
+### Fixed
+- Fixed Firestore connection issues causing "client is offline" errors
+- Improved error handling for network connectivity problems
+- Added retry mechanism for fetching registered users when offline
+- Prevented unnecessary Firestore connection resets that were causing data loading failures
+- Fixed issue with admin panel and workshop registrations disappearing on page refresh
+
+## [1.6.2] - 2023-03-06
+
+### Added
+- Implemented user edit functionality with a modal form in the admin dashboard
+- Added proper error handling and loading states for user management operations
+
+### Fixed
+- Fixed issue with Edit button not working in the user management section
+- Fixed issue with deleting users who are registered for workshops
+- Improved user deletion process to properly unregister users from workshops
+
+## [1.6.1] - 2023-03-06
+
+### Fixed
+- Fixed admin dashboard showing mock users instead of actual Firebase users
+- Added proper user management functionality with real-time Firebase data
+- Added status field to User type for better user management
+
+## [1.6.0] - 2023-03-06
+
+### Changed
+- Removed all mock data usage and ensured full Firebase integration
+- Updated workshop data fetching to only use Firebase Firestore
+- Improved error handling for Firebase data fetching
+- Enhanced user experience with better loading and error states
+
+### Fixed
+- Fixed issue with workshops showing mock data instead of Firebase data
+- Resolved TypeScript errors in Firebase service
+- Improved error handling when no workshops are found
+
 ## [1.5.1] - 2023-12-11
 
 ### Added

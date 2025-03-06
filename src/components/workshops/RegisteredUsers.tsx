@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../../types';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
-import { Users } from 'lucide-react';
+import { Users, RefreshCw } from 'lucide-react';
+import { isOnline, safelyEnableNetwork } from '../../utils/firebaseConnectionReset';
 
 interface RegisteredUsersProps {
   userIds: string[];
@@ -15,6 +16,7 @@ const RegisteredUsers: React.FC<RegisteredUsersProps> = ({
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -29,10 +31,22 @@ const RegisteredUsers: React.FC<RegisteredUsersProps> = ({
         setError(null);
         const db = getFirestore();
         
+        // Check if we're online and try to enable network if needed
+        if (!isOnline()) {
+          throw new Error('You appear to be offline. Please check your internet connection.');
+        }
+        
+        // Try to ensure network is enabled
+        await safelyEnableNetwork(db);
+        
         const userPromises = userIds.map(async (userId) => {
-          const userDoc = await getDoc(doc(db, 'users', userId));
-          if (userDoc.exists()) {
-            return { id: userDoc.id, ...userDoc.data() } as User;
+          try {
+            const userDoc = await getDoc(doc(db, 'users', userId));
+            if (userDoc.exists()) {
+              return { id: userDoc.id, ...userDoc.data() } as User;
+            }
+          } catch (err) {
+            console.warn(`Error fetching user ${userId}:`, err);
           }
           return null;
         });
@@ -42,16 +56,51 @@ const RegisteredUsers: React.FC<RegisteredUsersProps> = ({
         );
         
         setUsers(fetchedUsers);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error fetching users:', err);
-        setError('Failed to load registered users');
+        
+        // Provide a more helpful error message
+        if (err.message?.includes('offline') || !isOnline()) {
+          setError('Failed to load users - you appear to be offline');
+        } else {
+          setError('Failed to load registered users');
+        }
+        
+        // If we have users from a previous fetch, keep showing them
+        if (users.length > 0) {
+          setLoading(false);
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchUsers();
-  }, [userIds]);
+    
+    // Set up an interval to retry if we're in an error state
+    let retryInterval: number | undefined;
+    
+    if (error && retryCount < 3) {
+      retryInterval = window.setInterval(() => {
+        if (isOnline()) {
+          setRetryCount(prev => prev + 1);
+          fetchUsers();
+        }
+      }, 5000); // Retry every 5 seconds, up to 3 times
+    }
+    
+    // Clean up interval on unmount
+    return () => {
+      if (retryInterval) {
+        clearInterval(retryInterval);
+      }
+    };
+  }, [userIds, retryCount]);
+
+  // Add a manual retry button
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
+  };
 
   if (loading) {
     return (
@@ -63,8 +112,22 @@ const RegisteredUsers: React.FC<RegisteredUsersProps> = ({
 
   if (error) {
     return (
-      <div className="text-red-500 dark:text-red-400 text-sm">
-        {error}
+      <div className="flex flex-col space-y-2">
+        <div className="text-red-500 dark:text-red-400 text-sm flex items-center">
+          <span>{error}</span>
+          <button 
+            onClick={handleRetry}
+            className="ml-2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            title="Retry loading users"
+          >
+            <RefreshCw size={14} />
+          </button>
+        </div>
+        {users.length > 0 && (
+          <div className="text-sm text-gray-500">
+            Showing previously loaded data
+          </div>
+        )}
       </div>
     );
   }

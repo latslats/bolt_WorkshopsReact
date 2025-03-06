@@ -1,6 +1,16 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { WorkshopsState, Workshop } from '../../types';
-import { mockWorkshops } from '../../utils/mockData';
+import { registerUserForWorkshop } from '../../services/firebaseService';
+import { RootState } from '../index';
+import { ThunkAction, Action } from '@reduxjs/toolkit';
+
+// Define AppThunk type
+export type AppThunk<ReturnType = void> = ThunkAction<
+  ReturnType,
+  RootState,
+  unknown,
+  Action<string>
+>;
 
 const initialState: WorkshopsState = {
   workshops: [],
@@ -128,10 +138,7 @@ const workshopsSlice = createSlice({
       const workshopId = action.payload;
       const workshop = state.workshops.find(w => w.id === workshopId);
       
-      // Get current user from localStorage
-      const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-      
-      if (workshop && workshop.registered < workshop.capacity && currentUser?.id) {
+      if (workshop && workshop.registered < workshop.capacity) {
         // Increment registered count
         workshop.registered += 1;
         
@@ -140,33 +147,8 @@ const workshopsSlice = createSlice({
           workshop.registrations = [];
         }
         
-        if (!workshop.registrations.includes(currentUser.id)) {
-          workshop.registrations.push(currentUser.id);
-        }
-        
-        // Update user's registeredWorkshops in localStorage
-        if (currentUser.registeredWorkshops) {
-          if (!currentUser.registeredWorkshops.includes(workshopId)) {
-            currentUser.registeredWorkshops.push(workshopId);
-          }
-        } else {
-          currentUser.registeredWorkshops = [workshopId];
-        }
-        
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-        
-        // Update localStorage for workshops
-        const workshops = JSON.parse(localStorage.getItem('workshops') || '[]');
-        const updatedWorkshops = workshops.map((w: Workshop) => 
-          w.id === workshopId 
-            ? { 
-                ...w, 
-                registered: w.registered + 1,
-                registrations: workshop.registrations 
-              } 
-            : w
-        );
-        localStorage.setItem('workshops', JSON.stringify(updatedWorkshops));
+        // This is just to update the local state, the actual Firebase update is done in the thunk
+        // We'll get the user ID from the thunk action
       }
     },
     addWorkshop(state, action: PayloadAction<Workshop>) {
@@ -301,5 +283,26 @@ export const {
   deleteWorkshop,
   updateAttendance
 } = workshopsSlice.actions;
+
+// Thunk action to register a user for a workshop
+export const registerForWorkshopAsync = (workshopId: string): AppThunk => async (dispatch, getState) => {
+  try {
+    const { auth } = getState();
+    const userId = auth.user?.id;
+    
+    if (!userId) {
+      console.error('Cannot register: No user is logged in');
+      return;
+    }
+    
+    // Call the Firebase service to register the user
+    await registerUserForWorkshop(userId, workshopId);
+    
+    // Update the local state
+    dispatch(registerForWorkshop(workshopId));
+  } catch (error) {
+    console.error('Error registering for workshop:', error);
+  }
+};
 
 export default workshopsSlice.reducer;

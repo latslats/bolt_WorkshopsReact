@@ -13,15 +13,9 @@ import {
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { User, Workshop } from '../types';
-import { mockUsers, mockWorkshops, getWorkshopRegistrationsByUser, getUsersForWorkshop, getCurrentUser } from '../utils/mockData';
-
-// Check if we're using mock data
-const useMockData = import.meta.env.VITE_USE_MOCK_DATA === 'true';
 
 // User Services
 export const getUsers = async (): Promise<User[]> => {
-  if (useMockData) return mockUsers;
-  
   try {
     const usersCollection = collection(db, 'users');
     const userSnapshot = await getDocs(usersCollection);
@@ -33,8 +27,6 @@ export const getUsers = async (): Promise<User[]> => {
 };
 
 export const getUserById = async (userId: string): Promise<User | null> => {
-  if (useMockData) return mockUsers.find(user => user.id === userId) || null;
-  
   try {
     const userDoc = await getDoc(doc(db, 'users', userId));
     if (userDoc.exists()) {
@@ -48,16 +40,6 @@ export const getUserById = async (userId: string): Promise<User | null> => {
 };
 
 export const createUser = async (userData: Omit<User, 'id'>): Promise<User> => {
-  if (useMockData) {
-    const newUser = { 
-      ...userData, 
-      id: (mockUsers.length + 1).toString(),
-      registeredWorkshops: []
-    };
-    mockUsers.push(newUser);
-    return newUser;
-  }
-  
   try {
     const userCollection = collection(db, 'users');
     const newUserRef = await addDoc(userCollection, {
@@ -78,14 +60,6 @@ export const createUser = async (userData: Omit<User, 'id'>): Promise<User> => {
 };
 
 export const updateUser = async (userId: string, userData: Partial<User>): Promise<void> => {
-  if (useMockData) {
-    const userIndex = mockUsers.findIndex(user => user.id === userId);
-    if (userIndex !== -1) {
-      mockUsers[userIndex] = { ...mockUsers[userIndex], ...userData };
-    }
-    return;
-  }
-  
   try {
     const userRef = doc(db, 'users', userId);
     await updateDoc(userRef, { 
@@ -99,14 +73,6 @@ export const updateUser = async (userId: string, userData: Partial<User>): Promi
 };
 
 export const deleteUser = async (userId: string): Promise<void> => {
-  if (useMockData) {
-    const userIndex = mockUsers.findIndex(user => user.id === userId);
-    if (userIndex !== -1) {
-      mockUsers.splice(userIndex, 1);
-    }
-    return;
-  }
-  
   try {
     await deleteDoc(doc(db, 'users', userId));
   } catch (error) {
@@ -117,8 +83,6 @@ export const deleteUser = async (userId: string): Promise<void> => {
 
 // Workshop Services
 export const getWorkshops = async (): Promise<Workshop[]> => {
-  if (useMockData) return mockWorkshops;
-  
   try {
     const workshopsCollection = collection(db, 'workshops');
     const workshopSnapshot = await getDocs(workshopsCollection);
@@ -130,8 +94,6 @@ export const getWorkshops = async (): Promise<Workshop[]> => {
 };
 
 export const getWorkshopById = async (workshopId: string): Promise<Workshop | null> => {
-  if (useMockData) return mockWorkshops.find(workshop => workshop.id === workshopId) || null;
-  
   try {
     const workshopDoc = await getDoc(doc(db, 'workshops', workshopId));
     if (workshopDoc.exists()) {
@@ -145,15 +107,6 @@ export const getWorkshopById = async (workshopId: string): Promise<Workshop | nu
 };
 
 export const createWorkshop = async (workshopData: Omit<Workshop, 'id'>): Promise<Workshop> => {
-  if (useMockData) {
-    const newWorkshop = { 
-      ...workshopData, 
-      id: (mockWorkshops.length + 1).toString() 
-    };
-    mockWorkshops.push(newWorkshop);
-    return newWorkshop;
-  }
-  
   try {
     const workshopCollection = collection(db, 'workshops');
     const newWorkshopRef = await addDoc(workshopCollection, {
@@ -172,14 +125,6 @@ export const createWorkshop = async (workshopData: Omit<Workshop, 'id'>): Promis
 };
 
 export const updateWorkshop = async (workshopId: string, workshopData: Partial<Workshop>): Promise<void> => {
-  if (useMockData) {
-    const workshopIndex = mockWorkshops.findIndex(workshop => workshop.id === workshopId);
-    if (workshopIndex !== -1) {
-      mockWorkshops[workshopIndex] = { ...mockWorkshops[workshopIndex], ...workshopData };
-    }
-    return;
-  }
-  
   try {
     const workshopRef = doc(db, 'workshops', workshopId);
     await updateDoc(workshopRef, { 
@@ -193,14 +138,6 @@ export const updateWorkshop = async (workshopId: string, workshopData: Partial<W
 };
 
 export const deleteWorkshop = async (workshopId: string): Promise<void> => {
-  if (useMockData) {
-    const workshopIndex = mockWorkshops.findIndex(workshop => workshop.id === workshopId);
-    if (workshopIndex !== -1) {
-      mockWorkshops.splice(workshopIndex, 1);
-    }
-    return;
-  }
-  
   try {
     await deleteDoc(doc(db, 'workshops', workshopId));
   } catch (error) {
@@ -211,24 +148,6 @@ export const deleteWorkshop = async (workshopId: string): Promise<void> => {
 
 // Registration Services
 export const registerUserForWorkshop = async (userId: string, workshopId: string): Promise<void> => {
-  if (useMockData) {
-    const userIndex = mockUsers.findIndex(user => user.id === userId);
-    if (userIndex !== -1) {
-      if (!mockUsers[userIndex].registeredWorkshops) {
-        mockUsers[userIndex].registeredWorkshops = [];
-      }
-      if (!mockUsers[userIndex].registeredWorkshops?.includes(workshopId)) {
-        mockUsers[userIndex].registeredWorkshops?.push(workshopId);
-      }
-      
-      const workshopIndex = mockWorkshops.findIndex(workshop => workshop.id === workshopId);
-      if (workshopIndex !== -1) {
-        mockWorkshops[workshopIndex].registered += 1;
-      }
-    }
-    return;
-  }
-  
   try {
     // Update user's registered workshops
     const userRef = doc(db, 'users', userId);
@@ -244,42 +163,32 @@ export const registerUserForWorkshop = async (userId: string, workshopId: string
           updatedAt: serverTimestamp()
         });
         
-        // Update workshop's registered count
+        // Update workshop's registered count and registrations array
         const workshopRef = doc(db, 'workshops', workshopId);
         const workshopDoc = await getDoc(workshopRef);
         
         if (workshopDoc.exists()) {
           const workshopData = workshopDoc.data();
-          await updateDoc(workshopRef, {
-            registered: (workshopData.registered || 0) + 1,
-            updatedAt: serverTimestamp()
-          });
+          const registrations = workshopData.registrations || [];
+          
+          // Only add the user if they're not already in the registrations array
+          if (!registrations.includes(userId)) {
+            await updateDoc(workshopRef, {
+              registered: (workshopData.registered || 0) + 1,
+              registrations: [...registrations, userId],
+              updatedAt: serverTimestamp()
+            });
+          }
         }
       }
     }
   } catch (error) {
     console.error(`Error registering user ${userId} for workshop ${workshopId}:`, error);
-    throw error;
+    throw error; // Re-throw the error so it can be caught by the caller
   }
 };
 
 export const unregisterUserFromWorkshop = async (userId: string, workshopId: string): Promise<void> => {
-  if (useMockData) {
-    const userIndex = mockUsers.findIndex(user => user.id === userId);
-    if (userIndex !== -1 && mockUsers[userIndex].registeredWorkshops) {
-      const registeredIndex = mockUsers[userIndex].registeredWorkshops?.indexOf(workshopId);
-      if (registeredIndex !== -1 && registeredIndex !== undefined) {
-        mockUsers[userIndex].registeredWorkshops?.splice(registeredIndex, 1);
-      }
-      
-      const workshopIndex = mockWorkshops.findIndex(workshop => workshop.id === workshopId);
-      if (workshopIndex !== -1 && mockWorkshops[workshopIndex].registered > 0) {
-        mockWorkshops[workshopIndex].registered -= 1;
-      }
-    }
-    return;
-  }
-  
   try {
     // Update user's registered workshops
     const userRef = doc(db, 'users', userId);
@@ -291,7 +200,7 @@ export const unregisterUserFromWorkshop = async (userId: string, workshopId: str
       
       if (registeredWorkshops.includes(workshopId)) {
         await updateDoc(userRef, {
-          registeredWorkshops: registeredWorkshops.filter(id => id !== workshopId),
+          registeredWorkshops: registeredWorkshops.filter((id: string) => id !== workshopId),
           updatedAt: serverTimestamp()
         });
         
@@ -301,9 +210,11 @@ export const unregisterUserFromWorkshop = async (userId: string, workshopId: str
         
         if (workshopDoc.exists()) {
           const workshopData = workshopDoc.data();
-          if (workshopData.registered > 0) {
+          const currentRegistered = workshopData.registered || 0;
+          
+          if (currentRegistered > 0) {
             await updateDoc(workshopRef, {
-              registered: workshopData.registered - 1,
+              registered: currentRegistered - 1,
               updatedAt: serverTimestamp()
             });
           }
@@ -317,14 +228,11 @@ export const unregisterUserFromWorkshop = async (userId: string, workshopId: str
 };
 
 export const getWorkshopRegistrations = async (workshopId: string): Promise<User[]> => {
-  if (useMockData) return getUsersForWorkshop(workshopId);
-  
   try {
     const usersCollection = collection(db, 'users');
     const q = query(usersCollection, where('registeredWorkshops', 'array-contains', workshopId));
-    const querySnapshot = await getDocs(q);
-    
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
+    const userSnapshot = await getDocs(q);
+    return userSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
   } catch (error) {
     console.error(`Error fetching registrations for workshop ${workshopId}:`, error);
     throw error;
@@ -332,30 +240,21 @@ export const getWorkshopRegistrations = async (workshopId: string): Promise<User
 };
 
 export const getUserRegistrations = async (userId: string): Promise<Workshop[]> => {
-  if (useMockData) return getWorkshopRegistrationsByUser(userId);
-  
   try {
-    const userDoc = await getDoc(doc(db, 'users', userId));
-    
-    if (userDoc.exists()) {
-      const userData = userDoc.data();
-      const registeredWorkshops = userData.registeredWorkshops || [];
-      
-      if (registeredWorkshops.length === 0) return [];
-      
-      const workshops: Workshop[] = [];
-      
-      for (const workshopId of registeredWorkshops) {
-        const workshopDoc = await getDoc(doc(db, 'workshops', workshopId));
-        if (workshopDoc.exists()) {
-          workshops.push({ id: workshopDoc.id, ...workshopDoc.data() } as Workshop);
-        }
-      }
-      
-      return workshops;
+    const user = await getUserById(userId);
+    if (!user || !user.registeredWorkshops || user.registeredWorkshops.length === 0) {
+      return [];
     }
     
-    return [];
+    const registeredWorkshops: Workshop[] = [];
+    for (const workshopId of user.registeredWorkshops) {
+      const workshop = await getWorkshopById(workshopId);
+      if (workshop) {
+        registeredWorkshops.push(workshop);
+      }
+    }
+    
+    return registeredWorkshops;
   } catch (error) {
     console.error(`Error fetching registrations for user ${userId}:`, error);
     throw error;

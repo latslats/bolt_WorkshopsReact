@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { Workshop } from '../../types';
-import { Calendar, Clock, User, CheckCircle } from 'lucide-react';
+import { Calendar, Clock, User, CheckCircle, Loader2 } from 'lucide-react';
 import Button from '../ui/Button';
 import { Card } from '../ui/Card';
 
@@ -12,8 +12,23 @@ interface WorkshopDetailProps {
 }
 
 const WorkshopDetail: React.FC<WorkshopDetailProps> = ({ workshop, onRegister }) => {
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   const [activeTab, setActiveTab] = React.useState('description');
+  const [isRegistering, setIsRegistering] = useState(false);
+  
+  // Check if the current user is already registered
+  const isUserRegistered = user && workshop.registrations && workshop.registrations.includes(user.id);
+  
+  const handleRegisterClick = async () => {
+    if (!isAuthenticated) return;
+    
+    setIsRegistering(true);
+    try {
+      await onRegister();
+    } finally {
+      setIsRegistering(false);
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -184,17 +199,53 @@ const WorkshopDetail: React.FC<WorkshopDetailProps> = ({ workshop, onRegister })
             Register to access workshop materials and secure your spot.
           </p>
           <Button 
-            onClick={onRegister}
-            disabled={!isAuthenticated}
-            className="bg-forest-green hover:bg-spring-garden text-white"
+            onClick={handleRegisterClick}
+            disabled={!isAuthenticated || isRegistering || isUserRegistered || workshop.registered >= workshop.capacity}
+            className={`
+              ${isUserRegistered 
+                ? 'bg-moss-green cursor-not-allowed' 
+                : workshop.registered >= workshop.capacity 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : isRegistering
+                    ? 'bg-spring-garden cursor-wait'
+                    : 'bg-forest-green hover:bg-spring-garden'
+              } text-white
+            `}
           >
-            {isAuthenticated ? 'Register' : 'Sign in to Register'}
+            {isRegistering ? (
+              <>
+                <Loader2 size={16} className="mr-2 animate-spin" />
+                Registering...
+              </>
+            ) : isUserRegistered ? (
+              'Already Registered'
+            ) : workshop.registered >= workshop.capacity ? (
+              'Workshop Full'
+            ) : (
+              'Register'
+            )}
           </Button>
           {!isAuthenticated && (
             <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
               You need to be signed in to register for workshops.
             </p>
           )}
+          {isUserRegistered && (
+            <p className="mt-2 text-sm text-green-600 dark:text-green-400">
+              You're all set! We'll send you a reminder before the workshop.
+            </p>
+          )}
+          
+          {/* Show registration count */}
+          <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+            <span>{workshop.registered} / {workshop.capacity} spots filled</span>
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-1">
+              <div 
+                className="bg-forest-green h-2 rounded-full" 
+                style={{ width: `${(workshop.registered / workshop.capacity) * 100}%` }}
+              ></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

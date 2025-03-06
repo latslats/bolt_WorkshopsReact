@@ -1,31 +1,20 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { Workshop } from '../../types';
 import WorkshopCard from '../workshops/WorkshopCard';
 import Button from '../ui/Button';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
-import { mockWorkshops } from '../../utils/mockData';
-import { setWorkshops } from '../../store/slices/workshopsSlice';
 import { useWorkshops } from '../../hooks/useWorkshops';
 
 const FeaturedWorkshops: React.FC = () => {
-  const dispatch = useDispatch();
   // Get workshops from Redux store
   const { workshops, loading, error } = useSelector((state: RootState) => state.workshops);
   
   // Use the useWorkshops hook to ensure data is loaded
   useWorkshops();
-  
-  // If no workshops are available in the store, use mock data as fallback
-  useEffect(() => {
-    if (workshops.length === 0 && !loading) {
-      console.log('No workshops found in store, using mock data as fallback');
-      dispatch(setWorkshops(mockWorkshops));
-    }
-  }, [workshops, loading, dispatch]);
   
   // For debugging
   console.log('Workshops in store:', workshops);
@@ -38,60 +27,53 @@ const FeaturedWorkshops: React.FC = () => {
     ? [...workshops]
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .slice(0, 3)
-    : mockWorkshops.slice(0, 3); // Use mock data as fallback
+    : []; // Empty array if no workshops available
   
   // For debugging
   console.log('Featured workshops:', featuredWorkshops);
   
-  // Sample workshop data for testing
-  const sampleWorkshops: Workshop[] = [
-    {
-      id: '1',
-      title: 'Introduction to React',
-      description: 'Learn the basics of React and build your first component.',
-      instructor: 'Bob Johnson',
-      date: '2023-10-15',
-      sessions: 4,
-      level: 'Beginner',
-      tags: ['React', 'JavaScript', 'Frontend'],
-      capacity: 20,
-      registered: 15,
-      materials: ['React Docs', 'CodeSandbox'],
-      imageUrl: 'https://source.unsplash.com/random/800x600/?react'
-    },
-    {
-      id: '2',
-      title: 'Advanced TypeScript',
-      description: 'Deep dive into TypeScript features and advanced type systems.',
-      instructor: 'Alice Chen',
-      date: '2023-10-22',
-      sessions: 3,
-      level: 'Advanced',
-      tags: ['TypeScript', 'JavaScript', 'Programming'],
-      capacity: 15,
-      registered: 10,
-      materials: ['TypeScript Handbook', 'GitHub Repo'],
-      imageUrl: 'https://source.unsplash.com/random/800x600/?typescript'
-    },
-    {
-      id: '3',
-      title: 'Firebase Fundamentals',
-      description: 'Learn how to integrate Firebase into your web applications.',
-      instructor: 'David Kim',
-      date: '2023-11-05',
-      sessions: 2,
-      level: 'Intermediate',
-      tags: ['Firebase', 'Backend', 'Database'],
-      capacity: 25,
-      registered: 18,
-      materials: ['Firebase Documentation', 'Sample Code'],
-      imageUrl: 'https://source.unsplash.com/random/800x600/?firebase'
-    }
-  ];
+  // If no workshops are available or still loading, show loading state
+  if (loading) {
+    return (
+      <section className="py-12 bg-white-linen">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-forest-green mb-8">Featured Workshops</h2>
+          <div className="flex justify-center">
+            <p>Loading workshops...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
   
-  // Use sample data if no workshops are available
-  const workshopsToDisplay = featuredWorkshops.length > 0 ? featuredWorkshops : sampleWorkshops;
+  // If there's an error, show error message
+  if (error) {
+    return (
+      <section className="py-12 bg-white-linen">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-forest-green mb-8">Featured Workshops</h2>
+          <div className="flex justify-center">
+            <p className="text-red-500">{error}</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
   
+  // If no workshops are available, show message
+  if (featuredWorkshops.length === 0) {
+    return (
+      <section className="py-12 bg-white-linen">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-forest-green mb-8">Featured Workshops</h2>
+          <div className="flex justify-center">
+            <p>No workshops available at the moment. Check back soon!</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-16 bg-gradient-to-b from-forest-green/5 to-forest-green/20 relative overflow-hidden">
       {/* Decorative elements */}
@@ -115,29 +97,19 @@ const FeaturedWorkshops: React.FC = () => {
           </p>
         </motion.div>
         
-        {loading ? (
-          <div className="mt-12 text-center py-12">
-            <p className="text-lg text-charcoal">Loading workshops...</p>
-          </div>
-        ) : error ? (
-          <div className="mt-12 text-center py-12">
-            <p className="text-lg text-red-500">{error}</p>
-          </div>
-        ) : (
-          <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {workshopsToDisplay.map((workshop: Workshop, index: number) => (
-              <motion.div
-                key={workshop.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="h-full"
-              >
-                <WorkshopCard workshop={workshop} />
-              </motion.div>
-            ))}
-          </div>
-        )}
+        <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          {featuredWorkshops.map((workshop: Workshop, index: number) => (
+            <motion.div
+              key={workshop.id}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              className="h-full"
+            >
+              <WorkshopCard workshop={workshop} />
+            </motion.div>
+          ))}
+        </div>
         
         <motion.div 
           className="mt-12 text-center"

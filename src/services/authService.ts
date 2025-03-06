@@ -628,21 +628,39 @@ export const getCurrentUserData = async (): Promise<User | null> => {
   
   console.log('Current user found in Firebase Auth:', currentUser.uid);
   try {
+    // Check if user is admin based on email
+    const isAdmin = await isUserAdmin(currentUser.email || '');
+    console.log('Admin check result:', isAdmin);
+    
     const userRef = doc(db, 'users', currentUser.uid);
     const userDoc = await safeGetDoc(userRef);
     
     if (userDoc.exists()) {
       console.log('User document found in Firestore');
+      
+      // Prepare user data, ensuring admin role is properly set if the user is an admin
       const userData = {
         id: currentUser.uid,
         name: currentUser.displayName || 'User',
         email: currentUser.email || '',
-        role: 'student', // Default role
+        // If isAdmin is true, set role to admin, otherwise use the role from Firestore or default to student
+        role: isAdmin ? 'admin' : (userDoc.data().role || 'student'),
         photoURL: currentUser.photoURL || '',
         ...(userDoc.data() as Partial<User>),
       } as User;
       
-      console.log('Returning current user data:', userData);
+      // Ensure role is set to admin if the user is an admin (overriding any other value)
+      if (isAdmin) {
+        userData.role = 'admin';
+      }
+      
+      // Update the user document to ensure role is correct
+      if (isAdmin && userData.role !== 'admin') {
+        await safeSetDoc(userRef, { role: 'admin' }, { merge: true });
+        console.log('Updated user role to admin in Firestore');
+      }
+      
+      console.log('Returning current user data with role:', userData.role);
       return userData;
     }
     
@@ -656,12 +674,13 @@ export const getCurrentUserData = async (): Promise<User | null> => {
         photoURL: currentUser.photoURL || '',
         registeredWorkshops: [],
         completedWorkshops: [],
-        role: 'student',
+        // Set role based on admin check
+        role: isAdmin ? 'admin' : 'student',
         createdAt: new Date().toISOString(),
       };
       
       await safeSetDoc(userRef, basicUserData, { merge: true });
-      console.log('Created basic user document in Firestore');
+      console.log('Created basic user document in Firestore with role:', basicUserData.role);
       
       return {
         id: currentUser.uid,

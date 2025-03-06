@@ -7,7 +7,6 @@ import {
   setError,
   filterWorkshops
 } from '../store/slices/workshopsSlice';
-import { mockWorkshops } from '../utils/mockData';
 import { getWorkshops } from '../services/firebaseService';
 import { Workshop } from '../types';
 
@@ -43,34 +42,25 @@ export const useWorkshops = () => {
 
       dispatch(setLoading(true));
       try {
-        // Check if we're using mock data based on environment variable
-        const useMockData = import.meta.env.VITE_USE_MOCK_DATA === 'true';
+        // Fetch from Firebase
+        const workshopsData = await getWorkshops();
         
-        let workshopsData;
-        if (useMockData) {
-          // Use mock data - this should be very fast
-          workshopsData = mockWorkshops;
+        if (!workshopsData || workshopsData.length === 0) {
+          console.log('No workshops found in Firebase');
+          dispatch(setWorkshops([]));
+          dispatch(setError('No workshops found. Please create some workshops.'));
         } else {
-          // Fetch from Firebase
-          workshopsData = await getWorkshops();
+          // Update the cache
+          workshopsCache.data = workshopsData;
+          workshopsCache.timestamp = now;
           
-          // If no workshops found in Firebase, use mock data as fallback
-          if (!workshopsData || workshopsData.length === 0) {
-            workshopsData = mockWorkshops;
-          }
+          dispatch(setWorkshops(workshopsData));
         }
-        
-        // Update the cache
-        workshopsCache.data = workshopsData;
-        workshopsCache.timestamp = now;
-        
-        dispatch(setWorkshops(workshopsData));
         setIsInitialized(true);
       } catch (err) {
         console.error('Error fetching workshops:', err);
-        // Use mock data as fallback in case of error
-        dispatch(setWorkshops(mockWorkshops));
-        dispatch(setError('Failed to fetch workshops from database. Using sample data instead.'));
+        dispatch(setWorkshops([]));
+        dispatch(setError('Failed to fetch workshops from database. Please try again later.'));
         setIsInitialized(true);
       }
     };

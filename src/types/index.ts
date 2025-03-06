@@ -6,6 +6,7 @@ export interface User {
   registeredWorkshops?: string[];
   completedWorkshops?: string[];
   photoURL?: string;
+  status?: 'Active' | 'Inactive';
   createdAt?: any; // Firebase Timestamp - using any to avoid serialization issues
   lastLogin?: any; // Firebase Timestamp - using any to avoid serialization issues
 }

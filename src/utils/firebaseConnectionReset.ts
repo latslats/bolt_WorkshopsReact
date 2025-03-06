@@ -5,11 +5,22 @@
 
 import { Firestore, enableNetwork, disableNetwork } from 'firebase/firestore';
 
+// Track if a reset is in progress to prevent multiple simultaneous resets
+let resetInProgress = false;
+
 /**
  * Resets a Firestore connection by terminating the client
  * This can help resolve 400 Bad Request errors and offline client issues
  */
 export const resetFirestoreClient = async (db: Firestore): Promise<void> => {
+  // If a reset is already in progress, don't start another one
+  if (resetInProgress) {
+    console.log('Firestore reset already in progress, skipping duplicate reset');
+    return;
+  }
+  
+  resetInProgress = true;
+  
   try {
     console.log('Resetting Firestore connection');
     
@@ -21,6 +32,9 @@ export const resetFirestoreClient = async (db: Firestore): Promise<void> => {
       console.warn('Error disabling network:', disableError);
       // Continue with reset even if disabling fails
     }
+    
+    // Small delay to allow operations to settle
+    await new Promise(resolve => setTimeout(resolve, 500));
     
     // Terminate the Firestore client to clear any stale connections
     // @ts-ignore - Accessing internal Firebase property to reset connection
@@ -64,5 +78,32 @@ export const resetFirestoreClient = async (db: Firestore): Promise<void> => {
     } catch (finalError) {
       console.error('Failed to re-enable network after error:', finalError);
     }
+  } finally {
+    // Always mark reset as complete, even if there was an error
+    resetInProgress = false;
+  }
+};
+
+/**
+ * Checks if the browser is online
+ */
+export const isOnline = (): boolean => {
+  return navigator.onLine;
+};
+
+/**
+ * Safely enables the Firestore network connection
+ */
+export const safelyEnableNetwork = async (db: Firestore): Promise<void> => {
+  if (!isOnline()) {
+    console.log('Browser is offline, skipping network enable');
+    return;
+  }
+  
+  try {
+    await enableNetwork(db);
+    console.log('Network enabled successfully');
+  } catch (error) {
+    console.error('Error enabling network:', error);
   }
 }; 

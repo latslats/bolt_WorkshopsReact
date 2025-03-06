@@ -20,21 +20,28 @@ export const useAuth = () => {
       
       // Check if Firestore connection is active
       if (!firestoreConnectionActive) {
-        console.log('Firestore connection not active, resetting before document creation');
-        await resetFirestoreConnection();
+        console.log('Firestore connection not active, waiting before document creation');
+        // Wait a moment for connection to establish
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
       
       const userRef = doc(db, 'users', firebaseUser.uid);
+      
+      // Check if user is admin
+      const isAdmin = await isUserAdmin(firebaseUser.email || '');
+      console.log('User admin status during document update:', isAdmin);
+      
       // Basic user data from Firebase Auth
       const userData = {
         email: firebaseUser.email,
         name: firebaseUser.displayName || 'User',
         photoURL: firebaseUser.photoURL,
         lastLogin: serverTimestamp(),
+        // Ensure role is set correctly
+        role: isAdmin ? 'admin' : (user?.role || 'student'),
         // Only set these fields if they don't exist yet
         // to avoid overwriting existing data
         ...(!user && {
-          role: 'student',
           registeredWorkshops: [],
           completedWorkshops: [],
           createdAt: serverTimestamp(),
@@ -43,35 +50,30 @@ export const useAuth = () => {
       
       // Use merge: true to only update the specified fields
       await setDoc(userRef, userData, { merge: true });
-      console.log('User document created/updated in Firestore');
+      console.log('User document created/updated in Firestore with role:', userData.role);
     } catch (error: any) {
       console.error('Error creating/updating user in Firestore:', error);
       
       // Check for specific 400 errors related to WebChannelConnection
-      if (error.message?.includes('400') || 
-          error.message?.includes('WebChannelConnection') || 
-          error.message?.includes('Listen stream')) {
-        console.warn('Detected WebChannelConnection error, resetting Firestore connection');
-        await resetFirestoreConnection();
-        // Wait a bit before retrying
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        // Try one more time with a fresh connection
+      if (error.code === 'firestore/invalid-argument' || 
+          error.message?.includes('400') || 
+          error.message?.includes('WebChannelConnection')) {
+        console.warn('Detected potential Firestore connection issue, will retry');
+        
+        // Wait a moment and try again
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
         try {
-          await refreshAuthToken();
-          const userRef = doc(db, 'users', firebaseUser.uid);
-          await setDoc(userRef, {
-            email: firebaseUser.email,
-            lastLogin: serverTimestamp(),
-          }, { merge: true });
-          console.log('Successfully updated user document after connection reset');
+          // Try to get user data directly
+          const userData = await getCurrentUserData();
+          if (userData) {
+            console.log('Successfully retrieved user data after connection issue');
+            dispatch(setUser(userData));
+          }
         } catch (retryError) {
-          console.error('Failed to update user document after connection reset:', retryError);
+          console.error('Error during retry after connection issue:', retryError);
         }
-      } else {
-        // For other errors, just reset the connection
-        await resetFirestoreConnection();
       }
-      // Don't throw - we still want auth to work even if Firestore fails
     }
   };
 
@@ -80,37 +82,7 @@ export const useAuth = () => {
     dispatch(setLoading(true));
     dispatch(clearError());
     
-    // Check if we're using mock data
-    const useMockData = import.meta.env.VITE_USE_MOCK_DATA === 'true';
-    console.log('Using mock data:', useMockData);
-    
-    if (useMockData) {
-      // Use mock data for local development
-      const loadMockUser = async () => {
-        try {
-          console.log('Loading mock user data');
-          const userData = await getCurrentUserData();
-          if (userData) {
-            console.log('Mock user data loaded:', userData);
-            dispatch(setUser(userData));
-          } else {
-            console.log('No mock user data found');
-            dispatch(setUser(null));
-          }
-        } catch (error) {
-          console.error('Error loading mock user:', error);
-          dispatch(setUser(null));
-          dispatch(setError('Failed to load mock user data'));
-        } finally {
-          dispatch(setLoading(false));
-        }
-      };
-      
-      loadMockUser();
-      return;
-    }
-    
-    // Use Firebase Auth for production
+    // Use Firebase Auth
     console.log('Setting up Firebase auth state listener');
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       console.log('Auth state changed, user:', firebaseUser?.uid);
@@ -124,12 +96,6 @@ export const useAuth = () => {
             await refreshAuthToken();
           }
           
-          // Ensure Firestore connection is active
-          if (!firestoreConnectionActive) {
-            console.log('Firestore connection not active, resetting before proceeding');
-            await resetFirestoreConnection();
-          }
-          
           // First, ensure user document exists in Firestore
           await createOrUpdateUserDoc(firebaseUser);
           
@@ -138,20 +104,24 @@ export const useAuth = () => {
           const userData = await getCurrentUserData();
           
           if (userData) {
-            console.log('User data found in Firestore:', userData.id);
+            console.log('User data found in Firestore:', userData.id, 'with role:', userData.role);
+            
+            // Double-check admin status to ensure it's correct
+            if (userData.email) {
+              const isAdmin = await isUserAdmin(userData.email);
+              if (isAdmin && userData.role !== 'admin') {
+                console.log('User is admin but role is not set correctly, updating');
+                userData.role = 'admin';
+              }
+            }
+            
             dispatch(setUser(userData));
             
             // Setup periodic token refresh to prevent 400 errors
             const tokenRefreshInterval = setInterval(async () => {
               console.log('Performing periodic token refresh');
               await refreshAuthToken();
-              
-              // Also check Firestore connection status
-              if (!firestoreConnectionActive) {
-                console.log('Firestore connection not active during periodic check, resetting');
-                await resetFirestoreConnection();
-              }
-            }, 30 * 60 * 1000); // Refresh every 30 minutes (reduced from 45)
+            }, 30 * 60 * 1000); // Refresh every 30 minutes
             
             // Clear interval on component unmount
             return () => {
@@ -161,6 +131,7 @@ export const useAuth = () => {
             console.log('No user data found in Firestore, creating basic user object');
             // If no user data in Firestore, create basic user object
             const admin = await isUserAdmin(firebaseUser.email || '');
+            console.log('Admin check for basic user:', admin);
             
             const basicUserData: User = {
               id: firebaseUser.uid,
@@ -172,7 +143,7 @@ export const useAuth = () => {
               photoURL: firebaseUser.photoURL || '',
             };
             
-            console.log('Using basic user data:', basicUserData);
+            console.log('Using basic user data with role:', basicUserData.role);
             dispatch(setUser(basicUserData));
           }
         } catch (error: any) {
@@ -209,16 +180,12 @@ export const useAuth = () => {
       dispatch(setLoading(false));
     });
 
-    // Return cleanup function
     return () => {
       console.log('Cleaning up auth state listener');
       unsubscribe();
       
-      // Reset Firestore connection on unmount to ensure fresh connections
-      console.log('Resetting Firestore connection on unmount');
-      resetFirestoreConnection().catch(resetError => {
-        console.warn('Error resetting Firestore connection on unmount:', resetError);
-      });
+      // Don't reset Firestore connection on unmount as it causes connection issues
+      // This was causing the "client is offline" errors
     };
   }, [dispatch]);
 

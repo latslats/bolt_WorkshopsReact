@@ -6,21 +6,23 @@ import { formatDate } from '../utils/dateUtils';
 import { Workshop } from '../types';
 import RegisteredUsers from './workshops/RegisteredUsers';
 import { useDispatch, useSelector } from 'react-redux';
-import { registerForWorkshop } from '../store/slices/workshopsSlice';
+import { registerForWorkshopAsync } from '../store/slices/workshopsSlice';
 import { RootState } from '../store';
+import { AppDispatch } from '../store';
 
 const WorkshopDetail: React.FC = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [workshop, setWorkshop] = useState<Workshop | null>(null);
   const [isRegistered, setIsRegistered] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
   
   // Get workshops from Redux store
   const { workshops, loading: workshopsLoading } = useSelector((state: RootState) => state.workshops);
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
   
   useEffect(() => {
     if (!workshopsLoading && id) {
@@ -39,10 +41,25 @@ const WorkshopDetail: React.FC = () => {
     }
   }, [id, workshops, workshopsLoading, user]);
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
+    if (!isAuthenticated) {
+      // Redirect to login if not authenticated
+      navigate('/login', { state: { from: `/workshop/${id}` } });
+      return;
+    }
+    
     if (id) {
-      dispatch(registerForWorkshop(id));
-      setIsRegistered(true);
+      try {
+        setIsRegistering(true);
+        await dispatch(registerForWorkshopAsync(id));
+        setIsRegistered(true);
+        // Show success message or notification here if needed
+      } catch (error) {
+        console.error('Failed to register for workshop:', error);
+        // Show error message or notification here if needed
+      } finally {
+        setIsRegistering(false);
+      }
     }
   };
 
@@ -103,20 +120,24 @@ const WorkshopDetail: React.FC = () => {
                   
                   <Button
                     onClick={handleRegister}
-                    disabled={workshop.registered >= workshop.capacity || isRegistered}
+                    disabled={workshop.registered >= workshop.capacity || isRegistered || isRegistering}
                     className={`w-full ${
                       isRegistered 
                         ? 'bg-moss-green cursor-not-allowed' 
                         : workshop.registered >= workshop.capacity 
                           ? 'bg-gray-400 cursor-not-allowed' 
-                          : 'bg-forest-green hover:bg-spring-garden'
+                          : isRegistering
+                            ? 'bg-spring-garden cursor-wait'
+                            : 'bg-forest-green hover:bg-spring-garden'
                     } text-white`}
                   >
                     {isRegistered 
                       ? 'Already Registered' 
                       : workshop.registered >= workshop.capacity 
                         ? 'Workshop Full' 
-                        : 'Register Now'}
+                        : isRegistering
+                          ? 'Registering...'
+                          : 'Register Now'}
                   </Button>
                   
                   {isRegistered && (
