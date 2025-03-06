@@ -1,19 +1,68 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { setUser, setError } from '../../store/slices/authSlice';
 import Button from '../ui/Button';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { signInWithGoogle } from '../../services/authService';
+import { signInWithGoogle, getRedirectResult, refreshAuthToken } from '../../services/authService';
 
 const SignupForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState('');
+  const [isResettingConnection, setIsResettingConnection] = useState(false);
   
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  // Check for redirect result on component mount
+  useEffect(() => {
+    const checkRedirectResult = async () => {
+      // Check if there's a pending redirect authentication
+      const isPendingRedirect = localStorage.getItem('auth_redirect_pending') === 'true';
+      
+      if (isPendingRedirect) {
+        setLoading(true);
+        const toastId = toast.loading('Completing Google sign-in...');
+        
+        try {
+          console.log('Checking for redirect result');
+          const result = await getRedirectResult();
+          
+          // Clear the pending flag
+          localStorage.removeItem('auth_redirect_pending');
+          
+          if (result && result.user) {
+            console.log('Redirect authentication successful');
+            
+            // Refresh token immediately to prevent Firestore token issues
+            console.log('Refreshing auth token after redirect login');
+            await refreshAuthToken();
+            
+            // The auth state listener will handle updating the user state
+            toast.success('Account created with Google successfully!', { id: toastId });
+            navigate('/dashboard');
+          } else {
+            console.log('No redirect result found');
+            toast.error('Google sign-in was not completed', { id: toastId });
+          }
+        } catch (error: any) {
+          console.error('Error processing redirect result:', error);
+          localStorage.removeItem('auth_redirect_pending');
+          
+          const errorMessage = error.message || 'Failed to complete Google sign-in';
+          setFormError(errorMessage);
+          dispatch(setError(errorMessage));
+          toast.error(errorMessage, { id: toastId });
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    
+    checkRedirectResult();
+  }, [dispatch, navigate]);
 
   const handleGoogleSignup = async () => {
     setLoading(true);
@@ -26,6 +75,10 @@ const SignupForm: React.FC = () => {
       console.log('Attempting to sign up with Google');
       const userData = await signInWithGoogle();
       console.log('Google sign up successful, user data:', userData);
+      
+      // Refresh token to ensure it's valid for Firestore operations
+      await refreshAuthToken();
+      
       dispatch(setUser(userData));
       
       // Update the toast notification
@@ -35,14 +88,27 @@ const SignupForm: React.FC = () => {
       console.error('Google signup error:', error);
       const errorMessage = error.message || 'Failed to create account with Google. Please try again.';
       
+      // Special case for redirect initiated - don't show as error
+      if (errorMessage.includes('Redirecting to Google')) {
+        toast.loading('Redirecting to Google sign-in...', { id: toastId });
+        return; // Don't set error state for redirect
+      }
+      
       setFormError(errorMessage);
       dispatch(setError(errorMessage));
       
       // Update the toast notification with the error
       toast.error(errorMessage, { id: toastId });
     } finally {
-      setLoading(false);
+      // Only set loading to false if we're not redirecting
+      if (!localStorage.getItem('auth_redirect_pending')) {
+        setLoading(false);
+      }
     }
+  };
+  
+  const handleRetry = () => {
+    handleGoogleSignup();
   };
 
   return (
@@ -64,12 +130,27 @@ const SignupForm: React.FC = () => {
         </div>
       )}
       
+      {formError && formError.includes('network') && (
+        <div className="mt-4">
+          <Button
+            variant="outline"
+            fullWidth
+            onClick={handleRetry}
+            disabled={loading || isResettingConnection}
+            className="flex items-center justify-center text-amber-600 border-amber-300 hover:bg-amber-50 dark:text-amber-400 dark:border-amber-800 dark:hover:bg-amber-900/20"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Retry Connection
+          </Button>
+        </div>
+      )}
+      
       <div className="mt-6">
         <Button
           variant="default"
           fullWidth
           onClick={handleGoogleSignup}
-          disabled={loading}
+          disabled={loading || isResettingConnection}
           className="flex items-center justify-center relative"
         >
           {loading ? (

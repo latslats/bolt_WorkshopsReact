@@ -16,6 +16,7 @@ import WorkshopDetailPage from './pages/WorkshopDetailPage'
 import ProfilePage from './pages/ProfilePage'
 import NotFoundPage from './pages/NotFoundPage'
 import AdminPage from './pages/AdminPage'
+import FilesPage from './pages/FilesPage'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -31,6 +32,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <Route path="workshops/:id" element={<WorkshopDetailPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="admin" element={<AdminPage />} />
+            <Route path="files" element={<FilesPage />} />
             <Route path="404" element={<NotFoundPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>

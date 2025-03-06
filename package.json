@@ -14,6 +14,7 @@
     "@types/lodash": "^4.17.16",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "dotenv": "^16.4.7",
     "firebase": "^11.4.0",
     "framer-motion": "^12.4.7",
     "lodash": "^4.17.21",

@@ -7,8 +7,7 @@ import { AlertCircle, RefreshCw, WifiOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { signInWithGoogle, getRedirectResult, refreshAuthToken } from '../../services/authService';
-import { auth } from '../../config/firebase';
-import { resetFirestoreConnection } from '../../utils/firebaseConnectionCheck';
+import { auth, resetFirestoreConnection } from '../../config/firebase';
 
 const LoginForm: React.FC = () => {
   const [loading, setLoading] = useState(false);

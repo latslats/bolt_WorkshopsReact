@@ -1,0 +1,72 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isUser(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isValidContentType() {
+      // List of allowed content types
+      return request.resource.contentType.matches('image/.*') || 
+             request.resource.contentType.matches('application/pdf') ||
+             request.resource.contentType.matches('application/msword') ||
+             request.resource.contentType.matches('application/vnd.openxmlformats-officedocument.wordprocessingml.document') ||
+             request.resource.contentType.matches('text/plain');
+    }
+    
+    function isValidFileSize() {
+      // Limit file size to 5MB
+      return request.resource.size <= 5 * 1024 * 1024;
+    }
+    
+    // Public files - read-only access for everyone
+    match /public/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Workshop materials - read-only for authenticated users, write for admins
+    match /workshops/{workshopId}/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() && isValidContentType() && isValidFileSize();
+    }
+    
+    // User-specific files - users can read/write their own files
+    match /users/{userId}/{allPaths=**} {
+      allow read: if isUser(userId) || isAdmin();
+      allow write: if isUser(userId) && isValidContentType() && isValidFileSize();
+    }
+    
+    // Workshop submissions - users can submit to their registered workshops
+    match /submissions/{workshopId}/{userId}/{allPaths=**} {
+      allow read: if isUser(userId) || isAdmin();
+      allow write: if isUser(userId) && isValidContentType() && isValidFileSize() &&
+                    exists(/databases/$(database)/documents/users/$(userId)) &&
+                    userId in get(/databases/$(database)/documents/users/$(userId)).data.registeredWorkshops;
+    }
+    
+    // Profile pictures - users can update their own profile picture
+    match /profile_pictures/{userId} {
+      allow read: if true; // Profile pictures are public
+      allow write: if isUser(userId) && 
+                    request.resource.contentType.matches('image/.*') && 
+                    request.resource.size <= 2 * 1024 * 1024; // 2MB limit for profile pictures
+    }
+    
+    // Default deny
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+} 

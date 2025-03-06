@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
 import { logout } from '../../store/slices/authSlice';
-import { Menu, X, Settings } from 'lucide-react';
+import { Menu, X, Settings, FileText } from 'lucide-react';
 import Button from '../ui/Button';
 
 const Navbar: React.FC = () => {
@@ -46,6 +46,11 @@ const Navbar: React.FC = () => {
                 <Link to="/workshops" className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-spring-garden text-sm font-medium text-charcoal hover:text-forest-green">
                   Workshops
                 </Link>
+                {isAuthenticated && (
+                  <Link to="/files" className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-spring-garden text-sm font-medium text-charcoal hover:text-forest-green">
+                    Files
+                  </Link>
+                )}
               </div>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-4">
@@ -124,6 +129,18 @@ const Navbar: React.FC = () => {
               >
                 Workshops
               </Link>
+              {isAuthenticated && (
+                <Link
+                  to="/files"
+                  className="block pl-3 pr-4 py-2 text-base font-medium text-charcoal hover:bg-moss-green/20 hover:text-forest-green"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <div className="flex items-center gap-2">
+                    <FileText size={16} />
+                    <span>Files</span>
+                  </div>
+                </Link>
+              )}
             </div>
             <div className="pt-4 pb-3 border-t border-moss-green/20 bg-white-linen">
               <div className="space-y-1">

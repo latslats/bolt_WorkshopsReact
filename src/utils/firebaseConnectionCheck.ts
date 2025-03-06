@@ -1,7 +1,7 @@
 import { auth, db } from '../config/firebase';
 import { doc, getDoc, collection, onSnapshot, setDoc } from 'firebase/firestore';
-import { refreshAuthToken } from '../services/authService';
 import { enableNetwork, disableNetwork, connectFirestoreEmulator } from 'firebase/firestore';
+import { resetFirestoreClient } from './firebaseConnectionReset';
 
 /**
  * Simple check if Firebase is initialized properly
@@ -14,6 +14,45 @@ export const checkFirebaseConnection = (): boolean => {
   } catch (error) {
     console.error('Firebase initialization check error:', error);
     return false;
+  }
+};
+
+/**
+ * Local implementation of token refresh to avoid circular dependency with authService
+ */
+const refreshToken = async (): Promise<string | null> => {
+  try {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      console.log('No user logged in to refresh token');
+      return null;
+    }
+    
+    console.log('Forcing token refresh for user:', currentUser.uid);
+    
+    // Add a timeout to prevent hanging
+    const tokenPromise = currentUser.getIdToken(true);
+    const timeoutPromise = new Promise<string | null>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Token refresh timed out after 10 seconds'));
+      }, 10000);
+    });
+    
+    // Race the token refresh against the timeout
+    const idToken = await Promise.race([tokenPromise, timeoutPromise]) as string;
+    
+    console.log('Token refreshed successfully');
+    
+    // Verify the token is valid by checking its length
+    if (!idToken || idToken.length < 50) {
+      console.warn('Refreshed token appears invalid (too short)');
+      throw new Error('Invalid token received during refresh');
+    }
+    
+    return idToken;
+  } catch (error: any) {
+    console.error('Error refreshing token:', error);
+    return null;
   }
 };
 
@@ -34,98 +73,66 @@ export const resetFirestoreConnection = async (): Promise<void> => {
     if (currentUser) {
       try {
         console.log('Refreshing auth token before connection reset');
-        await refreshAuthToken();
+        await refreshToken();
       } catch (tokenError) {
         console.warn('Auth token refresh warning before reset:', tokenError);
         // Continue with reset even if token refresh fails
       }
     }
     
-    // Temporarily disable network
-    await disableNetwork(db);
-    console.log('Network disabled temporarily');
+    // Use the resetFirestoreClient utility to terminate the client
+    await resetFirestoreClient(db);
     
-    // Wait longer to ensure connections are fully closed
-    // This is especially important for resolving 400 Bad Request errors
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    // Re-enable network
-    await enableNetwork(db);
-    console.log('Network re-enabled, connection should be fresh');
-    
-    // Wait a moment for the connection to stabilize
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // If user is authenticated, refresh the token AFTER re-enabling network
-    // This ensures the token is fresh with the new connection
+    // Check if we need to refresh the token after reconnection
     if (currentUser) {
       try {
         console.log('Refreshing auth token after connection reset');
-        await refreshAuthToken();
+        await currentUser.getIdToken(true);
+        console.log('Auth token refreshed after reset');
       } catch (tokenError) {
         console.warn('Auth token refresh warning after reset:', tokenError);
-        // Don't throw here, as the main connection reset was successful
+        // Continue even if token refresh fails
       }
     }
     
-    // Verify connection is working by attempting a simple read
-    let testRef;
+    // Verify connection is active
     try {
-      testRef = doc(collection(db, 'system_health_checks'), 'connection_test');
+      // Try a simple Firestore operation to verify connection
+      const testRef = doc(db, 'users', 'connection_test');
       await getDoc(testRef);
-      console.log('Connection verification successful - Firestore is accessible');
-    } catch (verifyError: Error | unknown) {
-      const errorMessage = verifyError instanceof Error ? verifyError.message : 'Unknown error';
-      console.warn('Connection verification warning:', errorMessage);
+      console.log('Firestore connection verified after reset');
+    } catch (verifyError) {
+      console.warn('Firestore connection verification failed:', verifyError);
       
-      // If we still have a 400 Bad Request or offline error, try a more aggressive approach
-      if (errorMessage.includes('400') || errorMessage.includes('Bad Request') || 
-          errorMessage.includes('offline') || errorMessage.includes('unavailable')) {
+      // If verification fails, try one more time with a different approach
+      try {
+        // Try to access a document in the users collection
+        // If it doesn't exist, that's fine - we just want to test the connection
+        const testDocId = auth.currentUser?.uid || 'connection_test';
+        const userRef = doc(collection(db, 'users'), testDocId);
+        await getDoc(userRef);
+        console.log('Firestore connection verified with alternative method');
+      } catch (secondVerifyError) {
+        console.error('Second verification attempt also failed:', secondVerifyError);
         
-        console.log('Still experiencing connection issues. Trying more aggressive reset...');
-        
-        // Try clearing browser storage for Firebase (this can help with corrupted IndexedDB)
+        // If both verification attempts fail, try to re-enable network
         try {
-          // Clear Firebase-related localStorage items
-          Object.keys(localStorage).forEach(key => {
-            if (key.includes('firebase') || key.includes('firestore')) {
-              localStorage.removeItem(key);
-            }
-          });
-          console.log('Cleared Firebase localStorage items');
-          
-          // Force another token refresh
-          if (currentUser) {
-            await currentUser.getIdToken(true);
-            console.log('Forced another token refresh');
-          }
-          
-          // Wait a moment
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          // Try one more connection test
-          if (testRef) {
-            await getDoc(testRef);
-            console.log('Connection successful after aggressive reset');
-          }
-        } catch (finalError) {
-          console.error('Aggressive reset also failed:', finalError);
-          console.log('You may need to clear browser data or restart the application');
+          await enableNetwork(db);
+          console.log('Network re-enabled after verification failures');
+        } catch (enableError) {
+          console.error('Failed to re-enable network after verification failures:', enableError);
         }
       }
     }
-    
-    return;
-  } catch (error: Error | unknown) {
+  } catch (error) {
     console.error('Error resetting Firestore connection:', error);
-    // Provide more detailed error information
-    if (error && typeof error === 'object' && 'code' in error) {
-      console.error(`Error code: ${error.code}`);
+    // Try to re-enable network if an error occurred during the reset process
+    try {
+      await enableNetwork(db);
+      console.log('Network re-enabled after error');
+    } catch (enableError) {
+      console.error('Failed to re-enable network after error:', enableError);
     }
-    if (error instanceof Error) {
-      console.error(`Error message: ${error.message}`);
-    }
-    throw error; // Re-throw to allow proper handling by caller
   }
 };
 
@@ -148,7 +155,7 @@ export const logFirebaseStatus = async (): Promise<void> => {
       if (currentUser) {
         // Try to refresh token first if user is signed in
         try {
-          await refreshAuthToken();
+          await refreshToken();
           console.log('- Auth token refreshed successfully');
         } catch (tokenError) {
           console.warn('- Auth token refresh failed:', tokenError);
@@ -156,8 +163,8 @@ export const logFirebaseStatus = async (): Promise<void> => {
       }
       
       try {
-        // First try the system health checks collection which should be allowed by security rules
-        const testRef = doc(collection(db, 'system_health_checks'), 'connection_test');
+        // First try the users collection which should be allowed by security rules
+        const testRef = doc(collection(db, 'users'), 'connection_test');
         
         // Set a timestamp to test write access (this will likely fail for non-admins due to security rules)
         try {
@@ -220,7 +227,7 @@ export const logFirebaseStatus = async (): Promise<void> => {
         ) {
           console.log('- Detected possible token issue, attempting to refresh token');
           try {
-            await refreshAuthToken();
+            await refreshToken();
             console.log('- Token refreshed after error detection');
             
             // Try to reset Firestore connection
