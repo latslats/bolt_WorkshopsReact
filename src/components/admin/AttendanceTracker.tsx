@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Check, X, Search, UserCheck, UserX, AlertCircle } from 'lucide-react';
+import { Check, X, Search, UserCheck, UserX, AlertCircle, Loader2, Circle, ClipboardList, CheckCircle } from 'lucide-react';
 import Button from '../ui/Button';
 import { getFirestore, collection, getDocs, doc, updateDoc, arrayUnion, arrayRemove, getDoc } from 'firebase/firestore';
 import { Workshop } from '../../types';
@@ -284,20 +284,17 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ workshopId }) => 
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-forest-green"></div>
+      <div className="flex justify-center items-center h-40">
+        <Loader2 className="h-8 w-8 animate-spin text-forest-green dark:text-moss-green" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-        <div className="flex items-center">
-          <AlertCircle size={20} className="mr-2" />
-          <strong className="font-bold mr-1">Error!</strong>
-          <span className="block sm:inline">{error}</span>
-        </div>
+      <div className="text-center py-6">
+        <AlertCircle className="h-10 w-10 text-red-500 mx-auto mb-4" />
+        <p className="text-red-500 dark:text-red-400">{error}</p>
       </div>
     );
   }

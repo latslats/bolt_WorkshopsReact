@@ -181,6 +181,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUploaded, currentI
               variant="outline" 
               size="sm"
               onClick={() => fileInputRef.current?.click()}
+              className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:text-forest-green dark:hover:text-moss-green"
             >
               Change Image
             </Button>
@@ -190,7 +191,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUploaded, currentI
             variant="outline"
             size="sm"
             onClick={() => setShowUrlInput(!showUrlInput)}
-            className="flex items-center"
+            className="flex items-center border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:text-forest-green dark:hover:text-moss-green"
           >
             <LinkIcon size={14} className="mr-1" />
             {showUrlInput ? 'Hide URL Input' : 'Use Image URL'}
@@ -212,7 +213,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUploaded, currentI
             <Button
               type="button"
               onClick={handleUrlSubmit}
-              className="rounded-l-none"
+              className="rounded-l-none bg-forest-green hover:bg-spring-garden text-white"
             >
               Use URL
             </Button>
@@ -245,73 +246,62 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUploaded, currentI
         </div>
       ) : (
         <div 
-          className="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:border-forest-green"
+          className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:border-forest-green dark:hover:border-moss-green bg-gray-50 dark:bg-gray-800"
           onClick={() => fileInputRef.current?.click()}
         >
-          <Upload size={32} className="text-gray-400 mb-2" />
-          <p className="text-sm text-gray-500 text-center">
-            Click to select an image or drag and drop
-            <br />
-            <span className="text-xs">PNG, JPG or GIF (max. 5MB)</span>
+          <Upload size={40} className="text-gray-400 dark:text-gray-500 mb-2" />
+          <p className="text-sm text-gray-600 dark:text-gray-400 text-center mb-1">
+            Click to upload an image
           </p>
+          <p className="text-xs text-gray-500 dark:text-gray-500 text-center">
+            JPG, PNG or GIF (max. 5MB)
+          </p>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="hidden"
+          />
         </div>
       )}
       
-      {/* File Input (hidden) */}
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        accept="image/*"
-        className="hidden"
-      />
-      
       {/* Error Message */}
       {error && (
-        <div className="flex items-center text-red-500 text-sm">
-          <AlertCircle size={16} className="mr-1" />
+        <div className="flex items-center text-red-500 dark:text-red-400 text-sm mt-2">
+          <AlertCircle size={16} className="mr-1 flex-shrink-0" />
           <span>{error}</span>
         </div>
       )}
       
       {/* Success Message */}
       {success && (
-        <div className="flex items-center text-green-500 text-sm">
-          <Check size={16} className="mr-1" />
+        <div className="flex items-center text-green-500 dark:text-green-400 text-sm mt-2">
+          <Check size={16} className="mr-1 flex-shrink-0" />
           <span>Image set successfully!</span>
         </div>
       )}
       
-      {/* Upload Controls */}
-      {file && !uploading && (
-        <div className="flex space-x-2">
-          <Button
-            type="button"
-            onClick={handleUpload}
-            className="flex-1"
-          >
-            Upload Image
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleClearFile}
-          >
-            Cancel
-          </Button>
-        </div>
+      {/* Upload Button and Progress */}
+      {file && !uploading && !success && (
+        <Button 
+          type="button" 
+          onClick={handleUpload}
+          className="w-full bg-forest-green hover:bg-spring-garden text-white"
+        >
+          Upload Image
+        </Button>
       )}
       
-      {/* Upload Progress */}
       {uploading && (
         <div className="space-y-2">
-          <div className="w-full bg-gray-200 rounded-full h-2.5">
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
             <div 
               className="bg-forest-green h-2.5 rounded-full" 
               style={{ width: `${uploadProgress}%` }}
             ></div>
           </div>
-          <p className="text-sm text-gray-500 text-center">
+          <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
             Uploading... {uploadProgress}%
           </p>
         </div>

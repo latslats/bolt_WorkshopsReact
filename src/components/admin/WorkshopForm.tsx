@@ -166,7 +166,7 @@ const WorkshopForm: React.FC<WorkshopFormProps> = ({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onBlur={() => handleBlur('title')}
-            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600 ${
+            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
               touched.title && errors.title ? 'border-red-500' : 'border-gray-300'
             }`}
           />
@@ -186,7 +186,7 @@ const WorkshopForm: React.FC<WorkshopFormProps> = ({
             onChange={(e) => setDescription(e.target.value)}
             onBlur={() => handleBlur('description')}
             rows={4}
-            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600 ${
+            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
               touched.description && errors.description ? 'border-red-500' : 'border-gray-300'
             }`}
           />
@@ -206,7 +206,7 @@ const WorkshopForm: React.FC<WorkshopFormProps> = ({
             value={instructor}
             onChange={(e) => setInstructor(e.target.value)}
             onBlur={() => handleBlur('instructor')}
-            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600 ${
+            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
               touched.instructor && errors.instructor ? 'border-red-500' : 'border-gray-300'
             }`}
           />
@@ -226,7 +226,7 @@ const WorkshopForm: React.FC<WorkshopFormProps> = ({
             value={date}
             onChange={(e) => setDate(e.target.value)}
             onBlur={() => handleBlur('date')}
-            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600 ${
+            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
               touched.date && errors.date ? 'border-red-500' : 'border-gray-300'
             }`}
           />
@@ -244,7 +244,7 @@ const WorkshopForm: React.FC<WorkshopFormProps> = ({
             id="level"
             value={level}
             onChange={(e) => setLevel(e.target.value as 'Beginner' | 'Intermediate' | 'Advanced')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           >
             <option value="Beginner">Beginner</option>
             <option value="Intermediate">Intermediate</option>
@@ -264,7 +264,7 @@ const WorkshopForm: React.FC<WorkshopFormProps> = ({
             value={sessions}
             onChange={(e) => setSessions(parseInt(e.target.value) || 1)}
             onBlur={() => handleBlur('sessions')}
-            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600 ${
+            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
               touched.sessions && errors.sessions ? 'border-red-500' : 'border-gray-300'
             }`}
           />
@@ -285,7 +285,7 @@ const WorkshopForm: React.FC<WorkshopFormProps> = ({
             value={capacity}
             onChange={(e) => setCapacity(parseInt(e.target.value) || 1)}
             onBlur={() => handleBlur('capacity')}
-            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600 ${
+            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
               touched.capacity && errors.capacity ? 'border-red-500' : 'border-gray-300'
             }`}
           />
@@ -308,7 +308,7 @@ const WorkshopForm: React.FC<WorkshopFormProps> = ({
               value={registered}
               onChange={(e) => setRegistered(parseInt(e.target.value) || 0)}
               onBlur={() => handleBlur('registered')}
-              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600 ${
+              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
                 touched.registered && errors.registered ? 'border-red-500' : 'border-gray-300'
               }`}
             />
@@ -327,13 +327,13 @@ const WorkshopForm: React.FC<WorkshopFormProps> = ({
             {tags.map((tag, index) => (
               <div 
                 key={index} 
-                className="bg-moss-green/20 text-forest-green px-3 py-1 rounded-full flex items-center"
+                className="bg-moss-green/20 text-forest-green dark:bg-moss-green/30 dark:text-moss-green px-3 py-1 rounded-full flex items-center"
               >
                 <span>{tag}</span>
                 <button 
                   type="button" 
                   onClick={() => removeTag(tag)}
-                  className="ml-2 text-forest-green hover:text-red-500"
+                  className="ml-2 text-forest-green hover:text-red-500 dark:text-moss-green dark:hover:text-red-400"
                 >
                   <X size={14} />
                 </button>
@@ -346,7 +346,7 @@ const WorkshopForm: React.FC<WorkshopFormProps> = ({
               value={newTag}
               onChange={(e) => setNewTag(e.target.value)}
               placeholder="Add a tag"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
             />
             <button
@@ -368,13 +368,13 @@ const WorkshopForm: React.FC<WorkshopFormProps> = ({
             {prerequisites.map((prerequisite, index) => (
               <div 
                 key={index} 
-                className="bg-lemon-yellow/20 text-charcoal px-3 py-2 rounded-md flex items-center justify-between border border-gray-200"
+                className="bg-lemon-yellow/20 text-charcoal dark:bg-lemon-yellow/10 dark:text-lemon-yellow px-3 py-2 rounded-md flex items-center justify-between border border-gray-200 dark:border-gray-600"
               >
                 <span>{prerequisite}</span>
                 <button 
                   type="button" 
                   onClick={() => removePrerequisite(prerequisite)}
-                  className="text-charcoal hover:text-red-500"
+                  className="text-charcoal hover:text-red-500 dark:text-lemon-yellow dark:hover:text-red-400"
                 >
                   <X size={16} />
                 </button>
@@ -387,7 +387,7 @@ const WorkshopForm: React.FC<WorkshopFormProps> = ({
               value={newPrerequisite}
               onChange={(e) => setNewPrerequisite(e.target.value)}
               placeholder="Add a prerequisite (e.g., Basic JavaScript knowledge)"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addPrerequisite())}
             />
             <button
@@ -413,19 +413,19 @@ const WorkshopForm: React.FC<WorkshopFormProps> = ({
               >
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex items-center">
-                    <Clock size={16} className="text-forest-green mr-2" />
+                    <Clock size={16} className="text-forest-green dark:text-moss-green mr-2" />
                     <input
                       type="text"
                       value={item.time}
                       onChange={(e) => updateScheduleItem(index, 'time', e.target.value)}
                       placeholder="Time (e.g., 10:00 AM - 11:30 AM)"
-                      className="px-2 py-1 border-b border-gray-300 dark:border-gray-600 bg-transparent focus:outline-none focus:border-forest-green"
+                      className="px-2 py-1 border-b border-gray-300 dark:border-gray-600 bg-transparent focus:outline-none focus:border-forest-green dark:text-white"
                     />
                   </div>
                   <button 
                     type="button" 
                     onClick={() => removeScheduleItem(index)}
-                    className="text-charcoal hover:text-red-500"
+                    className="text-charcoal hover:text-red-500 dark:text-gray-300 dark:hover:text-red-400"
                   >
                     <X size={16} />
                   </button>
@@ -435,20 +435,20 @@ const WorkshopForm: React.FC<WorkshopFormProps> = ({
                   value={item.title}
                   onChange={(e) => updateScheduleItem(index, 'title', e.target.value)}
                   placeholder="Title"
-                  className="w-full px-2 py-1 mb-2 border-b border-gray-300 dark:border-gray-600 bg-transparent focus:outline-none focus:border-forest-green font-medium"
+                  className="w-full px-2 py-1 mb-2 border-b border-gray-300 dark:border-gray-600 bg-transparent focus:outline-none focus:border-forest-green font-medium dark:text-white"
                 />
                 <textarea
                   value={item.description || ''}
                   onChange={(e) => updateScheduleItem(index, 'description', e.target.value)}
                   placeholder="Description (optional)"
                   rows={2}
-                  className="w-full px-2 py-1 bg-transparent focus:outline-none focus:border-forest-green text-sm"
+                  className="w-full px-2 py-1 bg-transparent focus:outline-none focus:border-forest-green text-sm dark:text-gray-300"
                 />
               </div>
             ))}
           </div>
           <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md border border-dashed border-gray-300 dark:border-gray-600">
-            <h4 className="font-medium mb-2 flex items-center text-forest-green">
+            <h4 className="font-medium mb-2 flex items-center text-forest-green dark:text-moss-green">
               <Clock size={16} className="mr-2" />
               Add Schedule Item
             </h4>
@@ -458,27 +458,27 @@ const WorkshopForm: React.FC<WorkshopFormProps> = ({
                 value={newScheduleItem.time}
                 onChange={(e) => setNewScheduleItem({...newScheduleItem, time: e.target.value})}
                 placeholder="Time (e.g., 10:00 AM - 11:30 AM)"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
               <input
                 type="text"
                 value={newScheduleItem.title}
                 onChange={(e) => setNewScheduleItem({...newScheduleItem, title: e.target.value})}
                 placeholder="Title"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
               <textarea
                 value={newScheduleItem.description || ''}
                 onChange={(e) => setNewScheduleItem({...newScheduleItem, description: e.target.value})}
                 placeholder="Description (optional)"
                 rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
               <Button 
                 type="button" 
                 onClick={addScheduleItem}
                 disabled={!newScheduleItem.time.trim() || !newScheduleItem.title.trim()}
-                className="w-full"
+                className="w-full bg-forest-green hover:bg-spring-garden text-white"
               >
                 <PlusCircle size={16} className="mr-2" />
                 Add to Schedule
@@ -496,13 +496,13 @@ const WorkshopForm: React.FC<WorkshopFormProps> = ({
             {materials.map((material, index) => (
               <div 
                 key={index} 
-                className="bg-white-linen text-charcoal px-3 py-2 rounded-md flex items-center justify-between border border-gray-200"
+                className="bg-white-linen text-charcoal dark:bg-gray-700 dark:text-gray-200 px-3 py-2 rounded-md flex items-center justify-between border border-gray-200 dark:border-gray-600"
               >
                 <span>{material}</span>
                 <button 
                   type="button" 
                   onClick={() => removeMaterial(material)}
-                  className="text-charcoal hover:text-red-500"
+                  className="text-charcoal hover:text-red-500 dark:text-gray-300 dark:hover:text-red-400"
                 >
                   <X size={16} />
                 </button>
@@ -515,7 +515,7 @@ const WorkshopForm: React.FC<WorkshopFormProps> = ({
               value={newMaterial}
               onChange={(e) => setNewMaterial(e.target.value)}
               placeholder="Add a material (e.g., PDF guide, GitHub repo)"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addMaterial())}
             />
             <button
@@ -539,11 +539,11 @@ const WorkshopForm: React.FC<WorkshopFormProps> = ({
             value={imageUrl}
             onChange={(e) => setImageUrl(e.target.value)}
             placeholder="https://example.com/image.jpg"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-forest-green dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           />
           {imageUrl && (
             <div className="mt-2">
-              <p className="text-sm text-gray-500 mb-1">Preview:</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Preview:</p>
               <img 
                 src={imageUrl} 
                 alt="Workshop preview" 
@@ -564,10 +564,11 @@ const WorkshopForm: React.FC<WorkshopFormProps> = ({
             type="button" 
             variant="outline" 
             onClick={onCancel}
+            className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
           >
             Cancel
           </Button>
-          <Button type="submit">
+          <Button type="submit" className="bg-forest-green hover:bg-spring-garden text-white">
             {isEditMode ? 'Update Workshop' : 'Create Workshop'}
           </Button>
         </div>

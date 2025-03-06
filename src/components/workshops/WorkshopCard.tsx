@@ -1,9 +1,10 @@
 import React, { useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Clock, Users, Tag, ArrowUpRight } from 'lucide-react';
-import { Card, CardContent, CardFooter } from '../ui/Card';
+import { Calendar, Clock } from 'lucide-react';
 import Button from '../ui/Button';
 import { Workshop } from '../../types';
+import { useDispatch } from 'react-redux';
+import { registerForWorkshop } from '../../store/slices/workshopsSlice';
 
 interface WorkshopCardProps {
   workshop: Workshop;
@@ -11,11 +12,17 @@ interface WorkshopCardProps {
 
 const WorkshopCard: React.FC<WorkshopCardProps> = ({ workshop }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   
   // Memoize the navigation handler
   const handleClick = useCallback(() => {
     navigate(`/workshops/${workshop.id}`);
   }, [navigate, workshop.id]);
+  
+  // Memoize the registration handler
+  const handleRegister = useCallback(() => {
+    dispatch(registerForWorkshop(workshop.id));
+  }, [dispatch, workshop.id]);
   
   // Calculate percentage of spots filled - memoize this calculation
   const percentFilled = useMemo(() => 
@@ -88,73 +95,103 @@ const WorkshopCard: React.FC<WorkshopCardProps> = ({ workshop }) => {
   );
   
   return (
-    <Card className="h-full flex flex-col overflow-hidden transition-all duration-300 hover:shadow-xl bg-gradient-to-br border-0 shadow-lg">
-      <div className="relative">
-        <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-80 z-0`}></div>
+    <div 
+      className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full flex flex-col"
+      onClick={handleClick}
+    >
+      {/* Workshop Image */}
+      <div className="relative h-48 overflow-hidden">
         <img 
-          src={workshop.imageUrl || getFallbackImageUrl()} 
+          src={workshop.imageUrl || 'https://source.unsplash.com/random/800x600/?workshop'} 
           alt={workshop.title} 
-          className="w-full h-48 object-cover relative z-10"
-          onError={handleImageError}
-          loading="lazy" // Add lazy loading for images
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.onerror = null;
+            target.src = 'https://source.unsplash.com/random/800x600/?workshop';
+          }}
         />
-        <div className="absolute top-0 right-0 m-3 px-3 py-1 bg-white shadow-md text-forest-green text-xs font-bold rounded-full z-20">
-          {workshop.level}
+        <div className="absolute top-0 right-0 p-2">
+          <span className="bg-lemon-yellow/90 text-charcoal dark:text-charcoal px-2 py-1 text-xs font-medium rounded-full">
+            {workshop.level}
+          </span>
         </div>
       </div>
       
-      <CardContent className="flex-grow relative z-10 pt-6">
-        <h3 className="text-xl font-bold text-forest-green dark:text-moss-green mb-2">{workshop.title}</h3>
-        <p className="text-charcoal dark:text-white-linen mb-4 line-clamp-2">{workshop.description}</p>
+      {/* Workshop Content */}
+      <div className="p-4 flex-1 flex flex-col">
+        <h3 className="text-lg font-bold text-forest-green dark:text-moss-green mb-2 line-clamp-2">{workshop.title}</h3>
         
-        <div className="space-y-3 text-sm text-charcoal/80 dark:text-white-linen/80">
-          <div className="flex items-center">
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-forest-green/10 mr-3">
-              <Calendar className="h-4 w-4 text-forest-green" />
-            </div>
+        <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-3">{workshop.description}</p>
+        
+        <div className="mt-auto space-y-3">
+          {/* Workshop Details */}
+          <div className="flex items-center text-gray-500 dark:text-gray-400 text-sm">
+            <Calendar className="h-4 w-4 mr-1" />
             <span>{formattedDate}</span>
           </div>
-          <div className="flex items-center">
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-forest-green/10 mr-3">
-              <Clock className="h-4 w-4 text-forest-green" />
-            </div>
+          
+          <div className="flex items-center text-gray-500 dark:text-gray-400 text-sm">
+            <Clock className="h-4 w-4 mr-1" />
             <span>{workshop.sessions} sessions</span>
           </div>
-          <div className="flex items-center">
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-forest-green/10 mr-3">
-              <Users className="h-4 w-4 text-forest-green" />
+          
+          {/* Tags */}
+          <div className="flex flex-wrap gap-1 mt-2">
+            {workshop.tags && workshop.tags.slice(0, 3).map((tag, index) => (
+              <span 
+                key={index} 
+                className="bg-moss-green/20 text-forest-green dark:bg-moss-green/30 dark:text-moss-green px-2 py-0.5 text-xs rounded-full"
+              >
+                {tag}
+              </span>
+            ))}
+            {workshop.tags && workshop.tags.length > 3 && (
+              <span className="text-gray-500 dark:text-gray-400 text-xs">+{workshop.tags.length - 3} more</span>
+            )}
+          </div>
+          
+          {/* Registration Status */}
+          <div className="mt-2">
+            <div className="flex justify-between items-center text-xs text-gray-600 dark:text-gray-300 mb-1">
+              <span>Available Spots</span>
+              <span className="font-medium">{workshop.capacity - workshop.registered} / {workshop.capacity}</span>
             </div>
-            <span>{workshop.registered} / {workshop.capacity} participants</span>
-          </div>
-          <div className="flex items-center">
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-forest-green/10 mr-3 self-start">
-              <Tag className="h-4 w-4 text-forest-green" />
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+              <div 
+                className={`h-1.5 rounded-full ${
+                  workshop.registered >= workshop.capacity 
+                    ? 'bg-red-500' 
+                    : workshop.registered >= workshop.capacity * 0.8 
+                      ? 'bg-yellow-500' 
+                      : 'bg-forest-green'
+                }`}
+                style={{ width: `${(workshop.registered / workshop.capacity) * 100}%` }}
+              ></div>
             </div>
-            {tagsElement}
           </div>
+          
+          {/* Action Button */}
+          <Button 
+            className={`w-full mt-3 ${
+              workshop.registered >= workshop.capacity 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-forest-green hover:bg-spring-garden'
+            } text-white`}
+            disabled={workshop.registered >= workshop.capacity}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRegister();
+            }}
+          >
+            {workshop.registered >= workshop.capacity ? 'Workshop Full' : 'Register Now'}
+          </Button>
         </div>
-      </CardContent>
-      
-      <CardFooter className="flex justify-between items-center bg-white/80 backdrop-blur-sm border-t border-gray-100 z-10">
-        <div className="w-1/2">
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div 
-              className={`h-full ${statusColor}`}
-              style={{ width: `${percentFilled}%` }}
-            ></div>
-          </div>
-          <p className="text-xs mt-1 text-charcoal/70 dark:text-white-linen/70">
-            <span className="font-medium">{statusText}:</span> {workshop.capacity - workshop.registered} spots left
-          </p>
-        </div>
-        <Button onClick={handleClick} className="group">
-          View Details
-          <ArrowUpRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-        </Button>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 };
 
 // Use React.memo to prevent unnecessary re-renders
 export default React.memo(WorkshopCard);
+

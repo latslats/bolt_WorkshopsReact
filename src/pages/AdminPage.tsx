@@ -125,63 +125,85 @@ const AdminPage: React.FC = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="mb-8"
       >
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Admin Dashboard
-        </h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">
-          Manage users, workshops, and system settings.
-        </p>
-      </motion.div>
-      
-      {/* Error Message */}
-      {errorMessage && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6" role="alert">
-          <div className="flex items-center">
-            <AlertCircle size={20} className="mr-2" />
-            <span className="block sm:inline">{errorMessage}</span>
-          </div>
-          <button 
-            className="absolute top-0 bottom-0 right-0 px-4 py-3"
-            onClick={() => setErrorMessage(null)}
-          >
-            <X size={18} />
-          </button>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-forest-green dark:text-white mb-2">
+            Admin Dashboard
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300">
+            Manage users, workshops, and system settings.
+          </p>
         </div>
-      )}
+        
+        {errorMessage && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6" role="alert">
+            <div className="flex items-center">
+              <AlertCircle size={20} className="mr-2" />
+              <span className="block sm:inline">{errorMessage}</span>
+            </div>
+            <button 
+              className="absolute top-0 right-0 p-2"
+              onClick={() => setErrorMessage(null)}
+            >
+              <X size={20} />
+            </button>
+          </div>
+        )}
       
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="users">Users</TabsTrigger>
-          <TabsTrigger value="workshops">Workshops</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
+        <TabsList className="bg-gray-100 dark:bg-gray-700">
+          <TabsTrigger 
+            value="users" 
+            className="text-gray-700 dark:text-gray-300 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800 data-[state=active]:text-forest-green dark:data-[state=active]:text-moss-green"
+          >
+            Users
+          </TabsTrigger>
+          <TabsTrigger 
+            value="workshops" 
+            className="text-gray-700 dark:text-gray-300 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800 data-[state=active]:text-forest-green dark:data-[state=active]:text-moss-green"
+          >
+            Workshops
+          </TabsTrigger>
+          <TabsTrigger 
+            value="settings" 
+            className="text-gray-700 dark:text-gray-300 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800 data-[state=active]:text-forest-green dark:data-[state=active]:text-moss-green"
+          >
+            Settings
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="users">
           {/* Users tab content */}
           <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mt-4">
-            <h3 className="text-xl font-semibold mb-4">User Management</h3>
+            <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">User Management</h3>
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-gray-50 dark:bg-gray-700">
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="text-gray-700 dark:text-gray-200">Name</TableHead>
+                  <TableHead className="text-gray-700 dark:text-gray-200">Email</TableHead>
+                  <TableHead className="text-gray-700 dark:text-gray-200">Role</TableHead>
+                  <TableHead className="text-gray-700 dark:text-gray-200">Status</TableHead>
+                  <TableHead className="text-gray-700 dark:text-gray-200">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {users.map(user => (
-                  <TableRow key={user.id}>
-                    <TableCell>{user.name}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>{user.role}</TableCell>
-                    <TableCell>{user.status}</TableCell>
+                  <TableRow key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableCell className="text-gray-800 dark:text-gray-200">{user.name}</TableCell>
+                    <TableCell className="text-gray-800 dark:text-gray-200">{user.email}</TableCell>
+                    <TableCell className="text-gray-800 dark:text-gray-200">{user.role}</TableCell>
+                    <TableCell className="text-gray-800 dark:text-gray-200">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        user.status === 'Active' 
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                          : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                      }`}>
+                        {user.status}
+                      </span>
+                    </TableCell>
                     <TableCell>
-                      <Button size="sm" variant="outline" className="mr-2">Edit</Button>
-                      <Button size="sm" variant="outline" className="text-red-600 border-red-600">Delete</Button>
+                      <Button size="sm" variant="outline" className="mr-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300">Edit</Button>
+                      <Button size="sm" variant="outline" className="text-red-600 border-red-600 dark:text-red-400 dark:border-red-400">Delete</Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -195,7 +217,7 @@ const AdminPage: React.FC = () => {
           {showWorkshopForm ? (
             <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mt-4">
               <div className="mb-6">
-                <h3 className="text-xl font-semibold">
+                <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
                   {editingWorkshop ? 'Edit Workshop' : 'Create New Workshop'}
                 </h3>
               </div>
@@ -229,7 +251,7 @@ const AdminPage: React.FC = () => {
                   setSelectedWorkshopId(null);
                   setErrorMessage(null);
                 }}
-                className="mb-4"
+                className="mb-4 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
               >
                 Back to Workshops
               </Button>
@@ -238,14 +260,14 @@ const AdminPage: React.FC = () => {
           ) : (
             <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mt-4">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-semibold">Workshop Management</h3>
+                <h3 className="text-xl font-semibold text-gray-800 dark:text-white">Workshop Management</h3>
                 <Button 
                   onClick={() => {
                     setShowWorkshopForm(true);
                     setEditingWorkshop(null);
                     setErrorMessage(null);
                   }}
-                  className="flex items-center"
+                  className="flex items-center bg-forest-green hover:bg-spring-garden text-white"
                 >
                   <Plus size={16} className="mr-1" />
                   Add Workshop
@@ -253,31 +275,31 @@ const AdminPage: React.FC = () => {
               </div>
               
               <Table>
-                <TableHeader>
+                <TableHeader className="bg-gray-50 dark:bg-gray-700">
                   <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Level</TableHead>
-                    <TableHead>Instructor</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Registered</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="text-gray-700 dark:text-gray-200">Title</TableHead>
+                    <TableHead className="text-gray-700 dark:text-gray-200">Level</TableHead>
+                    <TableHead className="text-gray-700 dark:text-gray-200">Instructor</TableHead>
+                    <TableHead className="text-gray-700 dark:text-gray-200">Date</TableHead>
+                    <TableHead className="text-gray-700 dark:text-gray-200">Registered</TableHead>
+                    <TableHead className="text-gray-700 dark:text-gray-200">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {workshops.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                      <TableCell colSpan={6} className="text-center py-8 text-gray-500 dark:text-gray-400">
                         No workshops found. Click "Add Workshop" to create one.
                       </TableCell>
                     </TableRow>
                   ) : (
                     workshops.map(workshop => (
-                      <TableRow key={workshop.id}>
-                        <TableCell>{workshop.title}</TableCell>
-                        <TableCell>{workshop.level}</TableCell>
-                        <TableCell>{workshop.instructor}</TableCell>
-                        <TableCell>{new Date(workshop.date).toLocaleDateString()}</TableCell>
-                        <TableCell>{workshop.registered} / {workshop.capacity}</TableCell>
+                      <TableRow key={workshop.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <TableCell className="text-gray-800 dark:text-gray-200">{workshop.title}</TableCell>
+                        <TableCell className="text-gray-800 dark:text-gray-200">{workshop.level}</TableCell>
+                        <TableCell className="text-gray-800 dark:text-gray-200">{workshop.instructor}</TableCell>
+                        <TableCell className="text-gray-800 dark:text-gray-200">{new Date(workshop.date).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-gray-800 dark:text-gray-200">{workshop.registered} / {workshop.capacity}</TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
                             <Button 
@@ -289,13 +311,14 @@ const AdminPage: React.FC = () => {
                                 setErrorMessage(null);
                               }}
                               title="Edit workshop"
+                              className="border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400"
                             >
                               <Edit size={16} />
                             </Button>
                             <Button 
                               size="sm" 
                               variant="outline" 
-                              className="text-red-600 border-red-600"
+                              className="text-red-600 border-red-600 dark:text-red-400 dark:border-red-400"
                               onClick={() => handleDeleteWorkshop(workshop.id)}
                               title="Delete workshop"
                             >
@@ -304,7 +327,7 @@ const AdminPage: React.FC = () => {
                             <Button 
                               size="sm" 
                               variant="outline" 
-                              className="text-blue-600 border-blue-600"
+                              className="text-green-600 border-green-600 dark:text-green-400 dark:border-green-400"
                               onClick={() => handleOpenAttendanceTracker(workshop.id)}
                               title="Manage attendance"
                             >
@@ -324,31 +347,32 @@ const AdminPage: React.FC = () => {
         <TabsContent value="settings">
           {/* Settings tab content */}
           <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mt-4">
-            <h3 className="text-xl font-semibold mb-4">System Settings</h3>
+            <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">System Settings</h3>
             <div className="space-y-4">
               <div>
-                <h4 className="font-medium mb-2">Site Maintenance</h4>
+                <h4 className="font-medium mb-2 text-gray-700 dark:text-gray-300">Site Maintenance</h4>
                 <div className="flex items-center">
                   <input type="checkbox" id="maintenance" className="mr-2" />
-                  <label htmlFor="maintenance">Enable maintenance mode</label>
+                  <label htmlFor="maintenance" className="text-gray-800 dark:text-gray-200">Enable maintenance mode</label>
                 </div>
               </div>
               
               <div>
-                <h4 className="font-medium mb-2">Registration</h4>
+                <h4 className="font-medium mb-2 text-gray-700 dark:text-gray-300">Registration</h4>
                 <div className="flex items-center">
                   <input type="checkbox" id="registration" className="mr-2" defaultChecked />
-                  <label htmlFor="registration">Allow new user registration</label>
+                  <label htmlFor="registration" className="text-gray-800 dark:text-gray-200">Allow new user registration</label>
                 </div>
               </div>
               
               <div className="pt-4">
-                <Button>Save Settings</Button>
+                <Button className="bg-forest-green hover:bg-spring-garden text-white">Save Settings</Button>
               </div>
             </div>
           </div>
         </TabsContent>
       </Tabs>
+      </motion.div>
     </div>
   );
 };
