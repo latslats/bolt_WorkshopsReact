@@ -66,7 +66,14 @@ const WorkshopDetailPage: React.FC = () => {
           ← Back to Workshops
         </Button>
         
-        <WorkshopDetail workshop={workshop} />
+        <WorkshopDetail 
+          workshop={workshop} 
+          onRegister={() => {
+            // Handle workshop registration
+            alert(`Registration for ${workshop.title} will be implemented soon!`);
+            // You would typically dispatch an action here to register the user
+          }} 
+        />
       </motion.div>
     </div>
   );

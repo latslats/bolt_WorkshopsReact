@@ -6,6 +6,8 @@ export interface User {
   registeredWorkshops?: string[];
   completedWorkshops?: string[];
   photoURL?: string;
+  createdAt?: any; // Firebase Timestamp - using any to avoid serialization issues
+  lastLogin?: any; // Firebase Timestamp - using any to avoid serialization issues
 }
 
 export interface Workshop {
@@ -21,6 +23,16 @@ export interface Workshop {
   registered: number;
   materials?: string[];
   imageUrl?: string;
+  registrations?: string[]; // Array of user IDs who registered
+  attendance?: string[]; // Array of user IDs who attended
+  schedule?: ScheduleItem[]; // Workshop schedule details
+  prerequisites?: string[]; // List of prerequisites for the workshop
+}
+
+export interface ScheduleItem {
+  time: string; // e.g., "10:00 AM - 11:30 AM"
+  title: string; // e.g., "Introduction to React Hooks"
+  description?: string; // Optional detailed description
 }
 
 export interface AuthState {

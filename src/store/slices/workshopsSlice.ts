@@ -138,6 +138,119 @@ const workshopsSlice = createSlice({
         );
         localStorage.setItem('workshops', JSON.stringify(updatedWorkshops));
       }
+    },
+    addWorkshop(state, action: PayloadAction<Workshop>) {
+      const newWorkshop = action.payload;
+      state.workshops.push(newWorkshop);
+      
+      // Apply current filters to update filteredWorkshops
+      const { search, difficulty, topic } = state.filters;
+      let shouldInclude = true;
+      
+      // Check if the new workshop matches current filters
+      if (search && !newWorkshop.title.toLowerCase().includes(search.toLowerCase()) && 
+          !newWorkshop.description.toLowerCase().includes(search.toLowerCase())) {
+        shouldInclude = false;
+      }
+      
+      if (difficulty && newWorkshop.level !== difficulty) {
+        shouldInclude = false;
+      }
+      
+      if (topic && !newWorkshop.tags.includes(topic)) {
+        shouldInclude = false;
+      }
+      
+      if (shouldInclude) {
+        state.filteredWorkshops.push(newWorkshop);
+        
+        // Apply sorting if needed
+        if (state.filters.sortBy === 'date') {
+          state.filteredWorkshops.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        } else if (state.filters.sortBy === 'difficulty') {
+          const difficultyOrder = { 'Beginner': 1, 'Intermediate': 2, 'Advanced': 3 };
+          state.filteredWorkshops.sort((a, b) => 
+            (difficultyOrder[a.level as keyof typeof difficultyOrder] || 0) - 
+            (difficultyOrder[b.level as keyof typeof difficultyOrder] || 0)
+          );
+        }
+      }
+    },
+    updateWorkshop(state, action: PayloadAction<Workshop>) {
+      const updatedWorkshop = action.payload;
+      
+      // Update in workshops array
+      state.workshops = state.workshops.map(workshop => 
+        workshop.id === updatedWorkshop.id ? updatedWorkshop : workshop
+      );
+      
+      // Update in filteredWorkshops array
+      const { search, difficulty, topic } = state.filters;
+      let shouldInclude = true;
+      
+      // Check if the updated workshop matches current filters
+      if (search && !updatedWorkshop.title.toLowerCase().includes(search.toLowerCase()) && 
+          !updatedWorkshop.description.toLowerCase().includes(search.toLowerCase())) {
+        shouldInclude = false;
+      }
+      
+      if (difficulty && updatedWorkshop.level !== difficulty) {
+        shouldInclude = false;
+      }
+      
+      if (topic && !updatedWorkshop.tags.includes(topic)) {
+        shouldInclude = false;
+      }
+      
+      // If it should be included, update it; otherwise, remove it
+      if (shouldInclude) {
+        state.filteredWorkshops = state.filteredWorkshops.map(workshop => 
+          workshop.id === updatedWorkshop.id ? updatedWorkshop : workshop
+        );
+      } else {
+        state.filteredWorkshops = state.filteredWorkshops.filter(
+          workshop => workshop.id !== updatedWorkshop.id
+        );
+      }
+      
+      // Apply sorting if needed
+      if (state.filters.sortBy === 'date') {
+        state.filteredWorkshops.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      } else if (state.filters.sortBy === 'difficulty') {
+        const difficultyOrder = { 'Beginner': 1, 'Intermediate': 2, 'Advanced': 3 };
+        state.filteredWorkshops.sort((a, b) => 
+          (difficultyOrder[a.level as keyof typeof difficultyOrder] || 0) - 
+          (difficultyOrder[b.level as keyof typeof difficultyOrder] || 0)
+        );
+      }
+    },
+    deleteWorkshop(state, action: PayloadAction<string>) {
+      const workshopId = action.payload;
+      
+      // Remove from workshops array
+      state.workshops = state.workshops.filter(workshop => workshop.id !== workshopId);
+      
+      // Remove from filteredWorkshops array
+      state.filteredWorkshops = state.filteredWorkshops.filter(
+        workshop => workshop.id !== workshopId
+      );
+    },
+    updateAttendance(state, action: PayloadAction<{ workshopId: string, attendance: string[] }>) {
+      const { workshopId, attendance } = action.payload;
+      
+      // Update in workshops array
+      state.workshops = state.workshops.map(workshop => 
+        workshop.id === workshopId 
+          ? { ...workshop, attendance } 
+          : workshop
+      );
+      
+      // Update in filteredWorkshops array
+      state.filteredWorkshops = state.filteredWorkshops.map(workshop => 
+        workshop.id === workshopId 
+          ? { ...workshop, attendance } 
+          : workshop
+      );
     }
   }
 });
@@ -152,7 +265,11 @@ export const {
   filterWorkshops,
   setFilter,
   clearFilters,
-  registerForWorkshop
+  registerForWorkshop,
+  addWorkshop,
+  updateWorkshop,
+  deleteWorkshop,
+  updateAttendance
 } = workshopsSlice.actions;
 
 export default workshopsSlice.reducer;

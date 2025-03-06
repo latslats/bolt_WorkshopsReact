@@ -49,26 +49,35 @@ const WorkshopCard: React.FC<WorkshopCardProps> = ({ workshop }) => {
   
   // Generate a fallback image URL based on the workshop title or tags
   const getFallbackImageUrl = useCallback(() => {
-    const searchTerm = workshop.tags[0] || 'coding';
+    const searchTerm = workshop.tags && workshop.tags.length > 0 
+      ? workshop.tags[0] 
+      : workshop.title || 'coding';
     return `https://source.unsplash.com/random/800x600/?${encodeURIComponent(searchTerm)}`;
-  }, [workshop.tags]);
+  }, [workshop.tags, workshop.title]);
   
   // Memoize the image error handler
   const handleImageError = useCallback((e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     // If image fails to load, use a fallback
     const target = e.target as HTMLImageElement;
     target.onerror = null; // Prevent infinite loop
-    target.src = `https://source.unsplash.com/random/800x600/?${encodeURIComponent(workshop.level.toLowerCase())}`;
+    const fallbackTerm = workshop.level ? workshop.level.toLowerCase() : 'workshop';
+    target.src = `https://source.unsplash.com/random/800x600/?${encodeURIComponent(fallbackTerm)}`;
   }, [workshop.level]);
   
   // Memoize the tags rendering
   const tagsElement = useMemo(() => (
     <div className="flex flex-wrap gap-1">
-      {workshop.tags.map((tag, index) => (
-        <span key={index} className="inline-block bg-white shadow-sm text-forest-green px-2 py-0.5 text-xs rounded-full">
-          {tag}
+      {workshop.tags && workshop.tags.length > 0 ? (
+        workshop.tags.map((tag, index) => (
+          <span key={index} className="inline-block bg-white shadow-sm text-forest-green px-2 py-0.5 text-xs rounded-full">
+            {tag}
+          </span>
+        ))
+      ) : (
+        <span className="inline-block bg-white shadow-sm text-forest-green px-2 py-0.5 text-xs rounded-full">
+          Workshop
         </span>
-      ))}
+      )}
     </div>
   ), [workshop.tags]);
   

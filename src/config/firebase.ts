@@ -82,8 +82,7 @@ try {
       cacheSizeBytes: CACHE_SIZE_UNLIMITED
     }),
     // Use long polling for more reliable connections in problematic networks
-    experimentalForceLongPolling: true,
-    experimentalAutoDetectLongPolling: true
+    experimentalForceLongPolling: true
   });
   
   console.log('Firestore initialized with modern cache configuration using default database');
@@ -135,19 +134,10 @@ try {
   // Try to enable basic persistence as fallback
   try {
     // Use the modern persistence API
-    import('firebase/firestore').then(({ initializeFirestore, persistentLocalCache, CACHE_SIZE_UNLIMITED }) => {
-      // Reinitialize with the modern API and default database
-      db = initializeFirestore(app, {
-        localCache: persistentLocalCache({
-          cacheSizeBytes: CACHE_SIZE_UNLIMITED
-        })
-      });
-      console.log('Firestore reinitialized with modern persistence API using default database');
-      firestoreConnectionActive = true;
-    }).catch(err => {
-      console.error('Error reinitializing Firestore with modern API:', err);
+    import('firebase/firestore').then(({ enableMultiTabIndexedDbPersistence }) => {
+      // Instead of reinitializing, just enable persistence on the existing instance
+      console.log('Attempting to enable multi-tab persistence on existing Firestore instance');
       
-      // If that fails, try the legacy persistence API
       enableMultiTabIndexedDbPersistence(db)
         .then(() => {
           console.log('Legacy multi-tab persistence enabled successfully');
@@ -157,16 +147,20 @@ try {
           if (err.code === 'failed-precondition') {
             console.warn('Multi-tab persistence not available - falling back to single-tab persistence');
             // Fall back to single-tab persistence
-            enableIndexedDbPersistence(db)
-              .then(() => {
-                console.log('Single-tab persistence enabled successfully');
-                firestoreConnectionActive = true;
-              })
-              .catch(e => console.warn('Single-tab persistence also failed:', e));
+            import('firebase/firestore').then(({ enableIndexedDbPersistence }) => {
+              enableIndexedDbPersistence(db)
+                .then(() => {
+                  console.log('Single-tab persistence enabled successfully');
+                  firestoreConnectionActive = true;
+                })
+                .catch(e => console.warn('Single-tab persistence also failed:', e));
+            });
           } else {
             console.warn('Firestore persistence could not be enabled:', err);
           }
         });
+    }).catch(err => {
+      console.error('Error setting up persistence:', err);
     });
   } catch (persistenceError) {
     console.error('Error setting up persistence:', persistenceError);
